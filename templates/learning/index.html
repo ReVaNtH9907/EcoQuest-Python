@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}EcoQuest Learning Academy — Interactive Environmental Education{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/learning.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Learning Academy Hero -->
+<section class="learning-hero">
+    <div class="learning-hero-container">
+        <span class="learning-hero-pill">
+            <span>🌱</span> Science-Backed Environmental Curriculum
+        </span>
+        <h1>EcoQuest Learning Academy</h1>
+        <p>
+            Master practical ecological concepts through engaging 5-minute modules, verify your knowledge with interactive quizzes, and earn 50 XP for every completed lesson.
+        </p>
+    </div>
+</section>
+
+<!-- Personal Learning Progress Banner (Authenticated Members) -->
+<section class="learning-progress-banner">
+    {% if user %}
+    <div class="learning-progress-card">
+        <div>
+            <div class="progress-banner-stats">
+                <div class="progress-stat-group">
+                    <span class="progress-stat-label">Curriculum Progress</span>
+                    <div class="progress-stat-value">
+                        {{ learning_progress.lessons_completed }} <span>/ {{ learning_progress.total_lessons }} Lessons</span>
+                    </div>
+                </div>
+                <div class="progress-stat-group">
+                    <span class="progress-stat-label">Learning XP Earned</span>
+                    <div class="progress-stat-value" style="color: var(--color-primary);">
+                        {{ learning_progress.learning_xp }} <span>XP</span>
+                    </div>
+                </div>
+                <div class="progress-stat-group">
+                    <span class="progress-stat-label">Completion</span>
+                    <div class="progress-stat-value">
+                        {{ learning_progress.progress_pct }}%
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" style="width: {{ learning_progress.progress_pct }}%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <span class="progress-stat-label" style="display: block; margin-bottom: 0.5rem;">Categories Mastered</span>
+            <div class="progress-categories-chips">
+                {% for cat in learning_progress.category_progress %}
+                <span class="progress-chip {% if cat.completed == cat.total and cat.total > 0 %}completed{% endif %}" title="{{ cat.name }}: {{ cat.completed }}/{{ cat.total }} completed">
+                    <span>{{ cat.icon }}</span> {{ cat.name }}: {{ cat.completed }}/{{ cat.total }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="learning-progress-card" style="grid-template-columns: 1fr auto; align-items: center;">
+        <div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 0.35rem; color: var(--color-text);">
+                Ready to track your environmental progress?
+            </h3>
+            <p style="font-size: 0.95rem; color: var(--color-text-secondary); margin: 0;">
+                Sign up or log in to record quiz scores, earn 50 XP per lesson, and climb community leaderboards.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('auth.login', next=url_for('learning.modules')) }}" class="btn btn-secondary">Log In</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Join EcoQuest</a>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Catalog & Lesson Discovery Section -->
+<section class="learning-catalog-section">
+    <!-- Category Filter Bar -->
+    <div class="category-filter-bar" role="tablist" aria-label="Curriculum Categories">
+        <a href="{{ url_for('learning.modules') }}"
+           class="category-tab {% if not active_category %}active{% endif %}"
+           data-category="all"
+           role="tab">
+            <span>🌐</span> All Categories
+            <span class="tab-count">{{ lessons|length }}</span>
+        </a>
+
+        {% for cat in categories %}
+        <a href="{{ url_for('learning.modules', category=cat.slug) }}"
+           class="category-tab {% if active_category == cat.slug %}active{% endif %}"
+           data-category="{{ cat.slug }}"
+           role="tab">
+            <span>{{ cat.icon }}</span> {{ cat.name }}
+            <span class="tab-count">{{ cat.total_lessons }}</span>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Lesson Cards Grid -->
+    <div class="lessons-grid">
+        {% for lesson in lessons %}
+        <article class="lesson-card" data-category="{{ lesson.category_slug }}">
+            <div>
+                <div class="lesson-card-header">
+                    <span class="lesson-category-tag">
+                        <span>{{ lesson.category_icon }}</span> {{ lesson.category_name }}
+                    </span>
+
+                    {% if lesson.completed %}
+                    <span class="lesson-status-badge completed" title="Quiz passed with {{ lesson.highest_score }}%">
+                        ✓ Completed
+                    </span>
+                    {% elif lesson.status == "in_progress" %}
+                    <span class="lesson-status-badge in-progress" title="Quiz attempted. Score: {{ lesson.highest_score }}%">
+                        ⏳ In Progress
+                    </span>
+                    {% else %}
+                    <span class="lesson-status-badge not-started">
+                        ○ Not Started
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="lesson-card-body">
+                    <div class="lesson-icon-title">
+                        <div class="lesson-card-icon">{{ lesson.icon }}</div>
+                        <h2 class="lesson-card-title">
+                            <a href="{{ url_for('learning.view_lesson', slug=lesson.slug) }}">
+                                {{ lesson.title }}
+                            </a>
+                        </h2>
+                    </div>
+                    <p class="lesson-card-summary">
+                        {{ lesson.summary }}
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <div class="lesson-card-meta">
+                    <span>⏱️ {{ lesson.estimated_minutes }} mins</span>
+                    <span>❓ {{ lesson.questions_count }} Questions</span>
+                    <span>🎯 70% to Pass</span>
+                </div>
+
+                <div class="lesson-card-footer">
+                    <span class="lesson-xp-badge">
+                        ⭐ +{{ lesson.xp_reward }} XP
+                    </span>
+
+                    {% if lesson.completed %}
+                    <a href="{{ url_for('learning.view_lesson', slug=lesson.slug) }}" class="lesson-card-btn btn btn-secondary">
+                        Review Lesson →
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('learning.view_lesson', slug=lesson.slug) }}" class="lesson-card-btn btn btn-primary">
+                        Start Lesson →
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/learning.js') }}"></script>
+{% endblock %}

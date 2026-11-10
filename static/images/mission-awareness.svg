@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradAware" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFBEB" />
+      <stop offset="100%" stop-color="#FEF3C7" />
+    </linearGradient>
+    <linearGradient id="speakerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bgGradAware)" />
+  <!-- Megaphone Body -->
+  <!-- Handle -->
+  <rect x="135" y="170" width="22" height="60" rx="6" fill="#475569" transform="rotate(-15 135 170)" />
+  <!-- Main cone -->
+  <polygon points="120,130 220,90 220,210 120,170" fill="url(#speakerGrad)" />
+  <!-- Back cap -->
+  <rect x="100" y="130" width="25" height="40" rx="6" fill="#047857" />
+  <!-- Front rim -->
+  <ellipse cx="220" cy="150" rx="12" ry="60" fill="#10B981" />
+  <!-- Soundwaves / Impact Rings (green & amber) -->
+  <path d="M 250 120 A 40 40 0 0 1 250 180" fill="none" stroke="#D97706" stroke-width="5" stroke-linecap="round" />
+  <path d="M 275 100 A 70 70 0 0 1 275 200" fill="none" stroke="#059669" stroke-width="6" stroke-linecap="round" />
+  <path d="M 300 80 A 100 100 0 0 1 300 220" fill="none" stroke="#10B981" stroke-width="5" stroke-linecap="round" />
+  <!-- Eco World / Leaf Sparkles -->
+  <circle cx="330" cy="110" r="6" fill="#059669" />
+  <circle cx="345" cy="160" r="8" fill="#D97706" />
+  <circle cx="325" cy="195" r="5" fill="#10B981" />
+  <!-- Community heart/leaf symbol -->
+  <path d="M 170 145 C 180 135 195 140 190 155 C 180 165 170 155 170 145 Z" fill="#F8FAFC" />
+</svg>

@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}{{ mission.title }} — EcoQuest Missions{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/missions.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="mission-detail-container">
+    <!-- Breadcrumb Navigation -->
+    <nav class="lesson-breadcrumbs" aria-label="Breadcrumb">
+        <a href="{{ url_for('main.index') }}">Home</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('missions.list_missions') }}">Missions</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('missions.list_missions', category=mission.category_slug) }}">
+            {{ mission.icon }} {{ mission.category }}
+        </a>
+        <span class="separator">/</span>
+        <span aria-current="page" style="color: var(--color-text); font-weight: 600;">
+            {{ mission.title }}
+        </span>
+    </nav>
+
+    <!-- Main Detail Layout -->
+    <div class="mission-detail-layout">
+        <!-- Left Content Column -->
+        <div>
+            <header class="mission-detail-header">
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <span class="mission-category-badge">
+                        <span>{{ mission.icon }}</span> {{ mission.category }}
+                    </span>
+                    <span class="mission-difficulty-badge {{ mission.difficulty|lower }}">
+                        {{ mission.difficulty }}
+                    </span>
+                    {% if mission.allow_repeat %}
+                    <span class="badge badge-neutral" title="You can repeat this challenge for recurring action">
+                        🔄 Repeatable Mission
+                    </span>
+                    {% endif %}
+                </div>
+
+                <h1 class="mission-detail-title">{{ mission.title }}</h1>
+
+                <div class="mission-detail-meta-bar">
+                    <span>📍 {{ mission.location }}</span>
+                    <span>⏱️ Estimated {{ mission.duration }}</span>
+                    <span>👥 {{ mission.completions_count }} verified completions</span>
+                </div>
+            </header>
+
+            <!-- Short Summary Lead -->
+            <p class="mission-summary-lead">
+                {{ mission.description }}
+            </p>
+
+            <!-- Why It Matters -->
+            <section class="detail-section-box">
+                <h2><span>🌍</span> Why This Mission Matters</h2>
+                <p style="color: #334155; line-height: 1.65; margin: 0;">
+                    {{ mission.why_it_matters }}
+                </p>
+            </section>
+
+            <!-- Step-by-Step Instructions -->
+            <section class="detail-section-box">
+                <h2><span>📋</span> Step-by-Step Instructions</h2>
+                <ol class="instruction-steps-list">
+                    {% for step in mission.instructions %}
+                    <li class="instruction-step-item">
+                        <span class="instruction-step-num">{{ loop.index }}</span>
+                        <span>{{ step }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </section>
+
+            <!-- Proof Requirements Box -->
+            <section class="proof-box">
+                <h2>📸 Verification Proof Requirements</h2>
+                <p>{{ mission.proof_requirements }}</p>
+                <div style="margin-top: 0.75rem; font-size: 0.8125rem; color: var(--color-text-secondary); font-style: italic;">
+                    Note: Camera capture and proof upload tools will be activated during the verification phase. Accept the mission now to prepare your fieldwork!
+                </div>
+            </section>
+
+            <!-- Safety Guidelines Box -->
+            <section class="safety-box">
+                <h2><span>⚠️</span> Fieldwork Safety Guidelines</h2>
+                <ul class="safety-list">
+                    {% for rule in mission.safety_guidelines %}
+                    <li>
+                        <span>•</span>
+                        <span>{{ rule }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        </div>
+
+        <!-- Right Column: Sticky Action Card -->
+        <aside class="mission-action-card">
+            <div class="action-card-media">
+                <img src="{{ url_for('static', filename='images/' + mission.image) }}"
+                     alt="{{ mission.title }} visual">
+            </div>
+
+            <div class="action-card-body">
+                <div class="action-card-rewards">
+                    <div>
+                        <div style="font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; color: var(--color-text-secondary);">
+                            Reward on Verification
+                        </div>
+                        <div class="action-reward-val">
+                            ⭐ +{{ mission.xp_reward }} XP
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; color: var(--color-text-secondary);">
+                            Duration
+                        </div>
+                        <div style="font-size: 1.25rem; font-weight: 700; color: var(--color-text);">
+                            {{ mission.duration }}
+                        </div>
+                    </div>
+                </div>
+
+                {% if not user %}
+                <!-- Unauthenticated CTA -->
+                <div style="text-align: center;">
+                    <p style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 1rem;">
+                        Sign in to accept this mission and track your fieldwork progress.
+                    </p>
+                    <a href="{{ url_for('auth.login', next=url_for('missions.view_mission', identifier=mission.slug)) }}" class="btn btn-primary action-card-btn">
+                        Log In to Accept Mission
+                    </a>
+                </div>
+                {% elif mission.user_status in ['accepted', 'in_progress'] %}
+                <!-- Already Accepted Status -->
+                <div>
+                    <div class="mission-status-pill ongoing" style="margin-bottom: 1rem;">
+                        ⏳ Mission Ongoing (Accepted {{ mission.accepted_at or 'recently' }})
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 1rem; text-align: center;">
+                        You are actively enrolled in this mission. Follow the fieldwork steps and prepare your verification proof!
+                    </p>
+                    <a href="{{ url_for('missions.submit_proof', identifier=mission.slug) }}" class="btn btn-primary action-card-btn" style="margin-bottom: 0.5rem;">
+                        📸 Submit Camera Proof
+                    </a>
+                    <button type="button"
+                            class="btn btn-outline action-card-btn"
+                            style="margin-bottom: 0.5rem; color: #DC2626; border-color: #FECACA; background-color: #FEF2F2; width: 100%; font-weight: 700;"
+                            onclick="openWithdrawModal('{{ mission.slug }}', '{{ mission.title|escape }}', '{{ url_for('missions.withdraw_action', identifier=mission.slug) }}')"
+                            title="Withdraw from this mission">
+                        ✕ Withdraw from Mission
+                    </button>
+                    <a href="{{ url_for('missions.my_missions') }}" class="btn btn-secondary action-card-btn">
+                        View in My Quests →
+                    </a>
+                </div>
+                {% elif mission.user_status == 'completed' and not mission.allow_repeat %}
+                <!-- Already Completed (Non-repeatable) -->
+                <div>
+                    <div class="mission-status-pill completed" style="margin-bottom: 1rem;">
+                        ✓ Mission Completed
+                    </div>
+                    <a href="{{ url_for('missions.list_missions') }}" class="btn btn-secondary action-card-btn">
+                        Explore Other Missions →
+                    </a>
+                </div>
+                {% else %}
+                <!-- Ready to Accept -->
+                <form method="POST" action="{{ url_for('missions.accept_action', identifier=mission.slug) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary action-card-btn">
+                        🎯 Accept Mission
+                    </button>
+                    <p style="font-size: 0.8125rem; color: var(--color-text-muted); text-align: center; margin-top: 0.75rem; margin-bottom: 0;">
+                        No XP awarded for accepting. XP is awarded upon verified completion.
+                    </p>
+                </form>
+                {% endif %}
+            </div>
+        </aside>
+    </div>
+
+    <!-- Navigation Footer -->
+    <div style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between;">
+        <a href="{{ url_for('missions.list_missions', category=mission.category_slug) }}" class="btn btn-secondary">
+            ← Back to {{ mission.category }} Missions
+        </a>
+        <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary">
+            Browse All Missions →
+        </a>
+    </div>
+</div>
+
+<!-- Responsive Withdraw Confirmation Dialog Modal -->
+<div id="withdraw-modal" class="withdraw-modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="withdraw-modal-title">
+    <div class="withdraw-modal-box">
+        <div class="withdraw-modal-header">
+            <div class="withdraw-modal-icon">⚠️</div>
+            <div>
+                <h3 id="withdraw-modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--color-text);">
+                    Withdraw from Mission
+                </h3>
+                <p style="margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--color-text-secondary);">
+                    Confirmation required
+                </p>
+            </div>
+        </div>
+
+        <div class="withdraw-modal-body" style="margin: 1.25rem 0; padding: 1rem; background-color: #F8FAFC; border-radius: 0.75rem; border: 1px solid var(--color-border);">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #1E293B;" id="withdraw-mission-name">
+                Mission Title
+            </div>
+            <p style="margin: 0.5rem 0 0; font-size: 0.95rem; color: #334155; line-height: 1.5;">
+                Are you sure you want to withdraw from this mission?
+            </p>
+            <p style="margin: 0.35rem 0 0; font-size: 0.8125rem; color: var(--color-text-muted);">
+                Your participation status will be updated to Withdrawn in Mission History. No XP will be awarded, but you can participate in other environmental missions anytime.
+            </p>
+        </div>
+
+        <div class="withdraw-modal-actions" style="display: flex; justify-content: flex-end; gap: 0.75rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary" onclick="closeWithdrawModal()" style="min-width: 90px; padding: 0.5rem 1rem;">
+                Cancel
+            </button>
+            <form id="withdraw-form" method="POST" action="" style="display: inline; margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger" style="background-color: #DC2626; border-color: #DC2626; color: #FFFFFF; font-weight: 700; min-width: 140px; padding: 0.5rem 1rem;">
+                    Confirm
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.withdraw-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+}
+.withdraw-modal-box {
+    background-color: var(--color-white);
+    border-radius: 1rem;
+    max-width: 480px;
+    width: 100%;
+    padding: 1.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    border: 1px solid var(--color-border);
+    animation: modalFadeIn 0.2s ease-out;
+}
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.withdraw-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+}
+.withdraw-modal-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: #FEF3C7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+</style>
+
+<script>
+function openWithdrawModal(slug, title, actionUrl) {
+    document.getElementById('withdraw-mission-name').textContent = title;
+    document.getElementById('withdraw-form').action = actionUrl;
+    const modal = document.getElementById('withdraw-modal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeWithdrawModal() {
+    const modal = document.getElementById('withdraw-modal');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+// Close on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeWithdrawModal();
+    }
+});
+
+// Close when clicking on backdrop
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('withdraw-modal');
+    if (e.target === modal) {
+        closeWithdrawModal();
+    }
+});
+</script>
+{% endblock %}

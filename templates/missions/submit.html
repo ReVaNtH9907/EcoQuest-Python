@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Mission Proof — {{ mission.title }} — EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/missions.css') }}">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
+{% block content %}
+<div class="camera-submission-container">
+    <!-- Breadcrumbs -->
+    <nav class="lesson-breadcrumbs" aria-label="Breadcrumb">
+        <a href="{{ url_for('main.index') }}">Home</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('missions.list_missions') }}">Missions</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('missions.view_mission', identifier=mission.slug) }}">{{ mission.title }}</a>
+        <span class="separator">/</span>
+        <span aria-current="page" style="color: var(--color-text); font-weight: 600;">
+            Direct Camera Verification
+        </span>
+    </nav>
+
+    <!-- Mission Header Banner -->
+    <div class="camera-mission-banner">
+        <div>
+            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                <span class="mission-category-badge">
+                    <span>{{ mission.icon }}</span> {{ mission.category }}
+                </span>
+                <span class="mission-difficulty-badge {{ mission.difficulty|lower }}">
+                    {{ mission.difficulty }}
+                </span>
+            </div>
+            <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--color-text); margin: 0 0 0.35rem;">
+                {{ mission.title }}
+            </h1>
+            <p style="font-size: 0.95rem; color: var(--color-text-secondary); margin: 0;">
+                📍 {{ mission.location }} • ⭐ +{{ mission.xp_reward }} XP on verification
+            </p>
+        </div>
+
+        <div style="text-align: right;">
+            <a href="{{ url_for('missions.view_mission', identifier=mission.slug) }}" class="btn btn-outline btn-sm">
+                View Instructions
+            </a>
+        </div>
+    </div>
+
+    <!-- Required Proof Guidelines Advisory -->
+    <div class="proof-box" style="margin-bottom: 2rem;">
+        <h2>📸 Proof Requirements For This Challenge</h2>
+        <p>{{ mission.proof_requirements }}</p>
+        <p style="margin-top: 0.5rem; font-size: 0.8125rem; color: var(--color-text-secondary);">
+            Notice: To prevent fabricated evidence, EcoQuest accepts only live camera captures directly from your device. Gallery uploads and file pickers are strictly disabled.
+        </p>
+    </div>
+
+    <!-- Live Camera Viewfinder Card -->
+    <div id="camera-viewport-card" class="camera-viewport-card">
+        <div class="camera-video-wrapper">
+            <video id="camera-viewfinder" autoplay playsinline muted></video>
+            <div id="camera-status-msg" class="camera-error-banner" style="display: none;"></div>
+        </div>
+
+        <!-- Camera Toolbar -->
+        <div class="camera-controls-bar">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" id="start-camera-btn" class="btn btn-secondary btn-sm">
+                    🎥 Restart Camera
+                </button>
+                <button type="button" id="switch-camera-btn" class="btn btn-outline btn-sm" style="display: none; background-color: #334155; color: #FFF; border-color: #475569;">
+                    🔄 Switch Camera
+                </button>
+            </div>
+
+            <!-- Live Recording Indicator -->
+            <div id="recording-indicator" class="recording-badge">
+                <span class="pulse-dot"></span>
+                <span>Recording Evidence: <span id="recording-timer">0:20</span></span>
+            </div>
+
+            <!-- Media Triggers -->
+            <div class="camera-trigger-group">
+                <button type="button" id="capture-before-btn" class="btn btn-primary" title="Snapshot the condition before you begin">
+                    📸 Capture Before-Photo
+                </button>
+                <button type="button" id="capture-after-btn" class="btn btn-primary" title="Snapshot the completed condition">
+                    📸 Capture After-Photo
+                </button>
+                <button type="button" id="start-record-btn" class="btn btn-secondary" title="Optional 20s video proof">
+                    ⏺️ Record Video
+                </button>
+                <button type="button" id="stop-record-btn" class="btn btn-warning" style="display: none;">
+                    ⏹️ Stop Recording
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evidence Submission Form -->
+    <form id="mission-evidence-form" data-mission-slug="{{ mission.slug }}">
+        <!-- Evidence Slots Grid -->
+        <div class="evidence-slots-grid">
+            <!-- Slot 1: Before Photo (Required) -->
+            <div class="evidence-slot-card" id="card-slot-before">
+                <div class="slot-header">
+                    <span class="slot-title">1. Before-Photo</span>
+                    <span id="badge-before-status" class="badge badge-warning">Required</span>
+                </div>
+                <div class="slot-preview-box">
+                    <div id="slot-before-empty" class="slot-empty-prompt">
+                        <span class="icon">📷</span>
+                        <span>Click 'Capture Before-Photo' above to snapshot target location before fieldwork.</span>
+                    </div>
+                    <div id="slot-before-filled" style="display: none; width: 100%; height: 100%;">
+                        <img id="preview-before-img" src="" alt="Before proof preview">
+                    </div>
+                </div>
+                <button type="button" id="retake-before-btn" class="btn btn-outline btn-sm" style="width: 100%;">
+                    🔄 Retake Before-Photo
+                </button>
+            </div>
+
+            <!-- Slot 2: After Photo (Required) -->
+            <div class="evidence-slot-card" id="card-slot-after">
+                <div class="slot-header">
+                    <span class="slot-title">2. After-Photo</span>
+                    <span id="badge-after-status" class="badge badge-warning">Required</span>
+                </div>
+                <div class="slot-preview-box">
+                    <div id="slot-after-empty" class="slot-empty-prompt">
+                        <span class="icon">✨</span>
+                        <span>Click 'Capture After-Photo' above once your environmental action is complete.</span>
+                    </div>
+                    <div id="slot-after-filled" style="display: none; width: 100%; height: 100%;">
+                        <img id="preview-after-img" src="" alt="After proof preview">
+                    </div>
+                </div>
+                <button type="button" id="retake-after-btn" class="btn btn-outline btn-sm" style="width: 100%;">
+                    🔄 Retake After-Photo
+                </button>
+            </div>
+
+            <!-- Slot 3: Video Evidence (Optional) -->
+            <div class="evidence-slot-card" id="card-slot-video">
+                <div class="slot-header">
+                    <span class="slot-title">3. Video Clip</span>
+                    <span id="badge-video-status" class="badge badge-neutral">Optional</span>
+                </div>
+                <div class="slot-preview-box">
+                    <div id="slot-video-empty" class="slot-empty-prompt">
+                        <span class="icon">🎥</span>
+                        <span>Optional: record up to 20 seconds of video walkthrough evidence.</span>
+                    </div>
+                    <div id="slot-video-filled" style="display: none; width: 100%; height: 100%;">
+                        <video id="preview-video-player" controls playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    </div>
+                </div>
+                <button type="button" id="retake-video-btn" class="btn btn-outline btn-sm" style="width: 100%;">
+                    🔄 Retake Video
+                </button>
+            </div>
+        </div>
+
+        <!-- GPS Verification Status Card -->
+        <div id="gps-status-card" class="gps-status-card">
+            <div>
+                <div id="gps-status-text" style="font-weight: 700; color: var(--color-text); margin-bottom: 0.25rem;">
+                    Acquiring Geolocation...
+                </div>
+                <div id="gps-coords-display" style="font-size: 0.875rem; color: var(--color-text-secondary);">
+                    Checking browser location coordinates.
+                </div>
+            </div>
+            <div>
+                <span class="badge badge-neutral">GPS Telemetry</span>
+            </div>
+        </div>
+
+        <!-- Description / Fieldwork Notes -->
+        <div class="detail-section-box">
+            <label for="evidence-description" style="display: block; font-weight: 700; color: var(--color-text); margin-bottom: 0.5rem;">
+                Fieldwork Notes & Action Summary <span style="color: var(--color-error);">*</span>
+            </label>
+            <textarea id="evidence-description"
+                      name="description"
+                      rows="4"
+                      class="toolbar-search-input"
+                      placeholder="Describe what you accomplished (e.g. 'Cleaned 300 meters of trail, segregated 4 kg plastic into 2 bags and disposed at community bin')..."
+                      required></textarea>
+            <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin-top: 0.5rem; margin-bottom: 0;">
+                Provide authentic, clear details of the work completed. Minimum 5 characters.
+            </p>
+        </div>
+
+        <!-- Submit Button -->
+        <div style="text-align: center; margin-top: 2rem;">
+            <button type="submit" id="submit-evidence-btn" class="btn btn-primary btn-lg" style="min-width: 320px;">
+                🚀 Submit Mission Proof for Verification
+            </button>
+            <p style="font-size: 0.8125rem; color: var(--color-text-secondary); margin-top: 0.75rem;">
+                Evidence will be encrypted and submitted directly to the verification queue. XP is awarded once verified.
+            </p>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/camera_capture.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}My Proof Submissions — EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/missions.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="submissions-history-container">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+        <div>
+            <span class="missions-hero-pill">
+                <span>📸</span> Proof Verification Ledger
+            </span>
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--color-text); margin: 0.5rem 0;">
+                My Verification Submissions
+            </h1>
+            <p style="color: var(--color-text-secondary); margin: 0; font-size: 1rem; max-width: 650px;">
+                Review all your camera-captured environmental evidence, GPS field logs, and AI verification outcomes.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="{{ url_for('missions.my_missions') }}" class="btn btn-secondary">
+                📋 My Active Quests
+            </a>
+            <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary">
+                + Explore Missions
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Bar -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div style="background-color: var(--color-white); border: 1px solid var(--color-border); border-radius: 0.75rem; padding: 1.25rem;">
+            <div style="font-size: 0.8125rem; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase;">
+                Total Submissions
+            </div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-text); margin-top: 0.25rem;">
+                {{ submissions|length }}
+            </div>
+        </div>
+
+        <div style="background-color: var(--color-white); border: 1px solid var(--color-border); border-radius: 0.75rem; padding: 1.25rem;">
+            <div style="font-size: 0.8125rem; font-weight: 600; color: #B45309; text-transform: uppercase;">
+                Pending Verification
+            </div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: #D97706; margin-top: 0.25rem;">
+                {{ submissions|selectattr('verification_status', 'in', ['Pending', 'Pending Verification', 'Processing'])|list|length }}
+            </div>
+        </div>
+
+        <div style="background-color: var(--color-white); border: 1px solid var(--color-border); border-radius: 0.75rem; padding: 1.25rem;">
+            <div style="font-size: 0.8125rem; font-weight: 600; color: var(--color-primary-dark); text-transform: uppercase;">
+                Verified Actions
+            </div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-primary); margin-top: 0.25rem;">
+                {{ submissions|selectattr('verification_status', 'equalto', 'Verified')|list|length }}
+            </div>
+        </div>
+
+        <div style="background-color: var(--color-white); border: 1px solid var(--color-border); border-radius: 0.75rem; padding: 1.25rem;">
+            <div style="font-size: 0.8125rem; font-weight: 600; color: #991B1B; text-transform: uppercase;">
+                Review Needed / Rejected
+            </div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: #DC2626; margin-top: 0.25rem;">
+                {{ submissions|selectattr('verification_status', 'in', ['Rejected', 'Requires Manual Review'])|list|length }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Submissions List -->
+    {% if submissions %}
+    <div class="submissions-list">
+        {% for sub in submissions %}
+        <article class="submission-record-card">
+            <div class="record-top-row">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                        <span style="display: inline-block; padding: 0.2rem 0.6rem; background-color: var(--color-primary-light); color: var(--color-primary-dark); font-weight: 800; font-size: 0.8125rem; border-radius: 9999px;">
+                            {{ sub.reference_id }}
+                        </span>
+                        <span style="font-size: 0.875rem; color: var(--color-text-secondary);">
+                            {{ sub.mission_category }}
+                        </span>
+                        <span style="font-size: 0.8125rem; color: var(--color-text-muted);">
+                            • Logged {{ sub.submitted_at }} (UTC)
+                        </span>
+                        {% if sub.is_demo_verification %}
+                        <span style="background-color: #FEF3C7; color: #92400E; font-size: 0.6875rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px;">
+                            Demo Mode
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--color-text); margin: 0.25rem 0;">
+                        {{ sub.mission_title }}
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    {% if sub.verification_status == 'Verified' %}
+                    <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.85rem; background-color: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; border-radius: 9999px; font-weight: 700; font-size: 0.875rem;">
+                        <span>✓</span> Verified {% if sub.xp_awarded %}(+{{ sub.xp_awarded_amount }} XP){% endif %}
+                    </span>
+                    {% elif sub.verification_status == 'Rejected' %}
+                    <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.85rem; background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; border-radius: 9999px; font-weight: 700; font-size: 0.875rem;">
+                        <span>✕</span> Rejected
+                    </span>
+                    {% elif sub.verification_status == 'Requires Manual Review' %}
+                    <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.85rem; background-color: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; border-radius: 9999px; font-weight: 700; font-size: 0.875rem;">
+                        <span>⚠️</span> Requires Manual Review
+                    </span>
+                    {% else %}
+                    <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.85rem; background-color: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; border-radius: 9999px; font-weight: 700; font-size: 0.875rem;">
+                        <span>⏳</span> {{ sub.verification_status }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Proof Media Grid -->
+            <div style="margin: 1.25rem 0;">
+                <div style="font-size: 0.8125rem; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 0.5rem;">
+                    Camera Captured Media
+                </div>
+                <div class="record-thumbs-grid">
+                    <div class="record-thumb-item">
+                        <a href="{{ url_for('missions.get_evidence', filename=sub.before_photo) }}" target="_blank" title="View Full Before Photo">
+                            <img src="{{ url_for('missions.get_evidence', filename=sub.before_photo) }}" alt="Before condition">
+                        </a>
+                        <div style="font-size: 0.75rem; text-align: center; color: var(--color-text-secondary); margin-top: 0.25rem;">Before Photo</div>
+                    </div>
+
+                    <div class="record-thumb-item">
+                        <a href="{{ url_for('missions.get_evidence', filename=sub.after_photo) }}" target="_blank" title="View Full After Photo">
+                            <img src="{{ url_for('missions.get_evidence', filename=sub.after_photo) }}" alt="After condition">
+                        </a>
+                        <div style="font-size: 0.75rem; text-align: center; color: var(--color-text-secondary); margin-top: 0.25rem;">After Photo</div>
+                    </div>
+
+                    {% if sub.video_path %}
+                    <div class="record-thumb-item" style="width: 180px;">
+                        <video src="{{ url_for('missions.get_evidence', filename=sub.video_path) }}" controls playsinline preload="metadata"></video>
+                        <div style="font-size: 0.75rem; text-align: center; color: var(--color-text-secondary); margin-top: 0.25rem;">Video Evidence</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Fieldwork Description -->
+            <div style="background-color: var(--color-bg); border-radius: 0.5rem; padding: 0.875rem 1rem; margin-bottom: 1rem;">
+                <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted);">
+                    Field Action Notes
+                </div>
+                <p style="margin: 0.25rem 0 0; font-size: 0.9375rem; color: var(--color-text); line-height: 1.5;">
+                    "{{ sub.description }}"
+                </p>
+            </div>
+
+            <!-- AI Findings Summary (if evaluated) -->
+            {% if sub.verification_explanation or sub.confidence_score %}
+            <div style="background-color: #F8FAFC; border: 1px solid var(--color-border); border-left: 3px solid {% if sub.verification_status == 'Verified' %}#059669{% elif sub.verification_status == 'Rejected' %}#DC2626{% else %}#D97706{% endif %}; border-radius: 0.5rem; padding: 0.875rem 1rem; margin-bottom: 1rem; font-size: 0.875rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <strong>AI Verification Findings:</strong>
+                    {% if sub.confidence_score %}
+                    <span style="font-weight: 800; color: {% if sub.confidence_score >= 70 %}#059669{% elif sub.confidence_score >= 40 %}#D97706{% else %}#DC2626{% endif %};">
+                        Score: {{ sub.confidence_score }}%
+                    </span>
+                    {% endif %}
+                </div>
+                <p style="margin: 0.25rem 0 0; color: #334155; line-height: 1.5;">
+                    {{ sub.verification_explanation }}
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Rejection reason if applicable -->
+            {% if sub.verification_status == 'Rejected' and sub.rejection_reason and sub.rejection_reason != sub.verification_explanation %}
+            <div style="background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.5rem; padding: 0.875rem 1rem; margin-bottom: 1rem;">
+                <div style="font-size: 0.8125rem; font-weight: 700; color: #B91C1C;">
+                    ⚠️ Verification Feedback:
+                </div>
+                <p style="margin: 0.25rem 0 0; font-size: 0.875rem; color: #7F1D1D;">
+                    {{ sub.rejection_reason }}
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Telemetry & Action Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--color-border); font-size: 0.8125rem; color: var(--color-text-secondary);">
+                <div>
+                    <span>📍 GPS: </span>
+                    {% if sub.latitude and sub.longitude %}
+                    <strong style="color: var(--color-text);">
+                        {{ sub.latitude }}° N, {{ sub.longitude }}° E (±{{ sub.location_accuracy|int }}m)
+                    </strong>
+                    {% else %}
+                    <span style="color: var(--color-text-muted);">Location unavailable</span>
+                    {% endif %}
+                </div>
+
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    {% if sub.verification_status in ['Pending', 'Pending Verification'] %}
+                    <form method="POST" action="{{ url_for('missions.trigger_verification', submission_id=sub.id) }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+                            🤖 Verify Evidence
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{{ url_for('missions.submission_confirmation', submission_id=sub.id) }}" style="color: var(--color-primary-dark); font-weight: 700; text-decoration: none;">
+                        View Receipt Details →
+                    </a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div style="text-align: center; padding: 4rem 1.5rem; background-color: var(--color-white); border-radius: 1rem; border: 1px dashed var(--color-border);">
+        <div style="font-size: 3.5rem; margin-bottom: 1rem;">📸</div>
+        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 0.5rem;">
+            No proof submissions yet
+        </h3>
+        <p style="color: var(--color-text-secondary); max-width: 500px; margin: 0 auto 1.5rem; line-height: 1.6;">
+            When you accept an environmental mission and capture before/after camera evidence in the field, your verification logs will appear here.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('missions.my_missions') }}" class="btn btn-secondary">
+                View My Accepted Quests
+            </a>
+            <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary">
+                Explore Available Missions
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,652 @@
+/* ============================================================
+   EcoQuest — Landing Page Specific Stylesheet
+   ============================================================
+   Builds on the base design system (style.css).
+   Zero external dependencies.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. HERO SECTION
+   ------------------------------------------------------------ */
+
+.hero-section {
+    padding: var(--space-12) 0 var(--space-16);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: var(--space-12);
+    align-items: center;
+}
+
+.hero-badge {
+    margin-bottom: var(--space-4);
+    display: inline-flex;
+}
+
+.hero-title {
+    font-size: clamp(2.25rem, 4vw, 3.25rem);
+    font-weight: var(--font-bold);
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: var(--color-text);
+    margin-bottom: var(--space-5);
+}
+
+.hero-title .text-highlight {
+    color: var(--color-primary);
+    position: relative;
+}
+
+.hero-description {
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-8);
+    max-width: 560px;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    align-items: center;
+    margin-bottom: var(--space-8);
+}
+
+.hero-trust-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border);
+}
+
+.hero-trust-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+}
+
+.hero-trust-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------
+   2. DASHBOARD PREVIEW WIDGET
+   ------------------------------------------------------------ */
+
+.preview-container {
+    position: relative;
+}
+
+.preview-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    padding: var(--space-6);
+    position: relative;
+    z-index: 2;
+}
+
+.preview-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.preview-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.preview-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+
+.preview-user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+.preview-avatar {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: var(--color-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-bold);
+    font-size: var(--text-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.preview-user-info h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    color: var(--color-text);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.preview-user-info span {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+.preview-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+.preview-metric-box {
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    transition: transform var(--transition-fast);
+}
+
+.preview-metric-box:hover {
+    transform: translateY(-1px);
+    border-color: var(--color-border-dark);
+}
+
+.preview-metric-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-1);
+}
+
+.preview-metric-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-medium);
+}
+
+.preview-metric-val {
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    color: var(--color-text);
+}
+
+.preview-metric-val.text-green {
+    color: var(--color-primary);
+}
+
+.preview-verification-feed {
+    background-color: var(--color-primary-light);
+    border: 1px solid rgba(5, 150, 105, 0.2);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.preview-feed-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.preview-feed-text {
+    font-size: var(--text-xs);
+    line-height: 1.4;
+    color: #065F46;
+}
+
+.preview-feed-text strong {
+    color: var(--color-primary-dark);
+}
+
+/* ------------------------------------------------------------
+   3. PROBLEM SECTION
+   ------------------------------------------------------------ */
+
+.problem-section {
+    padding: var(--space-16) 0;
+    background-color: var(--color-white);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.problem-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-8);
+    margin-top: var(--space-8);
+}
+
+.problem-card {
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    border: 1px solid var(--color-border);
+}
+
+.problem-card.card-dilemma {
+    background-color: #F8FAFC;
+    border-color: #E2E8F0;
+}
+
+.problem-card.card-solution {
+    background-color: var(--color-primary-light);
+    border-color: rgba(5, 150, 105, 0.25);
+    box-shadow: var(--shadow-sm);
+}
+
+.problem-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.problem-icon-pill {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: var(--font-bold);
+    flex-shrink: 0;
+}
+
+.problem-card.card-dilemma .problem-icon-pill {
+    background-color: #E2E8F0;
+    color: #64748B;
+}
+
+.problem-card.card-solution .problem-icon-pill {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.problem-card h3 {
+    font-size: var(--text-xl);
+    margin: 0;
+}
+
+.problem-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+}
+
+.problem-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+}
+
+.problem-item-icon {
+    font-weight: var(--font-bold);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.card-dilemma .problem-item-icon { color: #94A3B8; }
+.card-solution .problem-item-icon { color: var(--color-primary); }
+
+/* ------------------------------------------------------------
+   4. HOW IT WORKS (6 STEPS)
+   ------------------------------------------------------------ */
+
+.how-it-works-section {
+    padding: var(--space-16) 0;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+    margin-top: var(--space-10);
+}
+
+.step-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all var(--transition-base);
+}
+
+.step-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-border-dark);
+}
+
+.step-number-pill {
+    position: absolute;
+    top: var(--space-5);
+    right: var(--space-5);
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    color: var(--color-primary);
+    background-color: var(--color-primary-light);
+    border-radius: var(--radius-full);
+    padding: 0.15rem 0.6rem;
+}
+
+.step-icon-wrapper {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-md);
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: var(--space-4);
+}
+
+.step-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-text);
+    margin-bottom: var(--space-2);
+}
+
+.step-desc {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+}
+
+/* ------------------------------------------------------------
+   5. FEATURED MISSIONS
+   ------------------------------------------------------------ */
+
+.missions-section {
+    padding: var(--space-16) 0;
+    background-color: var(--color-white);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.mission-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all var(--transition-base);
+}
+
+.mission-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-border-dark);
+}
+
+.mission-media {
+    width: 100%;
+    height: 180px;
+    background-color: var(--color-bg);
+    overflow: hidden;
+    position: relative;
+}
+
+.mission-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+}
+
+.mission-card:hover .mission-media img {
+    transform: scale(1.02);
+}
+
+.mission-body {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.mission-meta-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+}
+
+.mission-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-text);
+    margin-bottom: var(--space-2);
+}
+
+.mission-desc {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-normal);
+    margin-bottom: var(--space-5);
+    flex: 1;
+}
+
+.mission-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    margin-top: auto;
+}
+
+/* ------------------------------------------------------------
+   6. ENVIRONMENTAL IMPACT PREVIEW
+   ------------------------------------------------------------ */
+
+.impact-section {
+    padding: var(--space-16) 0;
+}
+
+.impact-notice-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background-color: #FEF3C7;
+    border: 1px solid #FDE68A;
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: #92400E;
+    margin-bottom: var(--space-6);
+}
+
+.impact-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-6);
+    margin-top: var(--space-8);
+}
+
+.impact-stat-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    text-align: center;
+    transition: all var(--transition-base);
+}
+
+.impact-stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.impact-stat-icon {
+    font-size: 2rem;
+    margin-bottom: var(--space-3);
+    display: inline-block;
+}
+
+.impact-stat-number {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    color: var(--color-primary);
+    line-height: 1.1;
+    margin-bottom: var(--space-1);
+}
+
+.impact-stat-label {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--color-text);
+    margin-bottom: var(--space-1);
+}
+
+.impact-stat-sub {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+/* ------------------------------------------------------------
+   7. CALL TO ACTION BANNER
+   ------------------------------------------------------------ */
+
+.cta-section {
+    padding: var(--space-12) 0 var(--space-16);
+}
+
+.cta-box {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, #FFFFFF 100%);
+    border: 1px solid rgba(5, 150, 105, 0.25);
+    border-radius: var(--radius-xl);
+    padding: var(--space-12) var(--space-8);
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-title {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    color: var(--color-text);
+    margin-bottom: var(--space-3);
+}
+
+.cta-desc {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    max-width: 520px;
+    margin: 0 auto var(--space-6);
+}
+
+/* ------------------------------------------------------------
+   8. RESPONSIVE BREAKPOINTS
+   ------------------------------------------------------------ */
+
+@media (max-width: 1024px) {
+    .steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .impact-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-8);
+    }
+
+    .hero-description {
+        font-size: var(--text-base);
+    }
+
+    .problem-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .steps-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .impact-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-4);
+    }
+
+    .hero-trust-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+
+    .cta-box {
+        padding: var(--space-8) var(--space-4);
+    }
+}
+
+@media (max-width: 480px) {
+    .impact-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+    }
+}

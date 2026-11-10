@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Proof Submitted — {{ submission.reference_id }} — EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/missions.css') }}">
+<style>
+.pipeline-stepper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0 2rem;
+    flex-wrap: wrap;
+    font-size: 0.8125rem;
+}
+.pipeline-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 700;
+}
+.pipeline-step.done {
+    background-color: #ECFDF5;
+    color: #047857;
+    border: 1px solid #A7F3D0;
+}
+.pipeline-step.active {
+    background-color: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+}
+.pipeline-step.pending {
+    background-color: #F1F5F9;
+    color: #64748B;
+    border: 1px solid var(--color-border);
+}
+.pipeline-arrow {
+    color: var(--color-text-muted);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirmation-container">
+    <div class="confirmation-card">
+        <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">
+            {% if submission.verification_status == 'Verified' %}🎉{% elif submission.verification_status == 'Rejected' %}⚠️{% else %}🌱{% endif %}
+        </div>
+        
+        <div class="confirmation-badge">
+            <span>Proof Receipt:</span> {{ submission.reference_id }}
+        </div>
+
+        <h1 style="font-size: 2rem; font-weight: 800; color: var(--color-text); margin-bottom: 0.5rem;">
+            {% if submission.verification_status == 'Verified' %}
+            Mission Verified & Completed!
+            {% elif submission.verification_status == 'Rejected' %}
+            Mission Verification Update
+            {% else %}
+            Mission Evidence Submitted!
+            {% endif %}
+        </h1>
+
+        <p style="font-size: 1.125rem; color: var(--color-text-secondary); max-width: 600px; margin: 0 auto 1rem;">
+            Thank you for taking direct real-world environmental action for <strong>{{ mission.title }}</strong>!
+        </p>
+
+        <!-- Current Status Pill -->
+        <div style="margin-bottom: 1.5rem;">
+            {% if submission.verification_status == 'Verified' %}
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.25rem; background-color: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; border-radius: 9999px; font-weight: 700;">
+                <span>✓</span> Status: Verified — +{{ submission.xp_awarded_amount or mission.xp_reward }} XP Awarded!
+            </div>
+            {% elif submission.verification_status == 'Rejected' %}
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.25rem; background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; border-radius: 9999px; font-weight: 700;">
+                <span>✕</span> Status: Rejected
+            </div>
+            {% elif submission.verification_status == 'Requires Manual Review' %}
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.25rem; background-color: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; border-radius: 9999px; font-weight: 700;">
+                <span>⚠️</span> Status: Requires Manual Review
+            </div>
+            {% else %}
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.25rem; background-color: #FEF3C7; color: #B45309; border-radius: 9999px; font-weight: 700;">
+                <span>⏳</span> Status: {{ submission.verification_status }}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Verification Pipeline Stepper -->
+        <div class="pipeline-stepper">
+            <span class="pipeline-step done">✓ Proof Submitted</span>
+            <span class="pipeline-arrow">→</span>
+            <span class="pipeline-step {% if submission.verification_status in ['Processing', 'Verified', 'Rejected', 'Requires Manual Review'] %}done{% else %}active{% endif %}">
+                {% if submission.verification_status in ['Processing', 'Verified', 'Rejected', 'Requires Manual Review'] %}✓{% else %}⏳{% endif %} Evidence Validated
+            </span>
+            <span class="pipeline-arrow">→</span>
+            <span class="pipeline-step {% if submission.verification_status in ['Verified', 'Rejected', 'Requires Manual Review'] %}done{% elif submission.verification_status == 'Processing' %}active{% else %}pending{% endif %}">
+                {% if submission.verification_status in ['Verified', 'Rejected', 'Requires Manual Review'] %}✓ AI Analysis{% else %}AI Analysis{% endif %}
+            </span>
+            <span class="pipeline-arrow">→</span>
+            <span class="pipeline-step {% if submission.verification_status == 'Verified' %}done{% elif submission.verification_status in ['Rejected', 'Requires Manual Review'] %}active{% else %}pending{% endif %}">
+                {{ submission.verification_status }}
+            </span>
+        </div>
+
+        <!-- Run Pipeline Trigger if in Pending status -->
+        {% if submission.verification_status in ['Pending', 'Pending Verification'] %}
+        <div style="margin: 1.5rem auto 2rem; max-width: 500px; background-color: #F8FAFC; border: 1px solid var(--color-border); border-radius: 0.75rem; padding: 1.25rem;">
+            <p style="margin: 0 0 1rem; font-size: 0.9375rem; color: var(--color-text);">
+                Your evidence is ready for verification! Run the automated verification pipeline to assess your environmental proof.
+            </p>
+            <form method="POST" action="{{ url_for('missions.trigger_verification', submission_id=submission.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem; font-weight: 700;">
+                    🤖 Run AI Verification Pipeline Now
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- AI Verification Findings (if evaluated) -->
+        {% if submission.confidence_score or submission.verification_explanation %}
+        <div style="text-align: left; background-color: #F8FAFC; border: 1px solid var(--color-border); border-left: 4px solid {% if submission.verification_status == 'Verified' %}#059669{% elif submission.verification_status == 'Rejected' %}#DC2626{% else %}#D97706{% endif %}; border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; color: var(--color-text-secondary);">
+                    🤖 AI Verification Telemetry
+                </span>
+                {% if submission.is_demo_verification %}
+                <span style="background-color: #FEF3C7; color: #92400E; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px;">
+                    Demo Mode — Rule-Based Simulation
+                </span>
+                {% else %}
+                <span style="background-color: #E0E7FF; color: #3730A3; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px;">
+                    Multimodal AI Vision
+                </span>
+                {% endif %}
+            </div>
+
+            <div style="font-size: 0.875rem; line-height: 1.6;">
+                <div>
+                    <strong>Confidence Score:</strong> 
+                    <span style="font-weight: 800; color: {% if (submission.confidence_score or 0) >= 70 %}#059669{% elif (submission.confidence_score or 0) >= 40 %}#D97706{% else %}#DC2626{% endif %};">
+                        {{ submission.confidence_score }}%
+                    </span>
+                    • Relevance: <strong>{{ submission.evidence_relevance|capitalize if submission.evidence_relevance else 'Evaluated' }}</strong>
+                </div>
+
+                {% if submission.before_after_comparison %}
+                <div style="margin-top: 0.35rem; color: #334155;">
+                    <strong>Before/After Comparison:</strong> {{ submission.before_after_comparison }}
+                </div>
+                {% endif %}
+
+                {% if submission.detected_inconsistencies %}
+                <div style="margin-top: 0.35rem; color: #991B1B;">
+                    <strong>Inconsistencies / Flags:</strong> {{ submission.detected_inconsistencies }}
+                </div>
+                {% endif %}
+
+                <div style="margin-top: 0.5rem; color: #1E293B;">
+                    <strong>Audit Rationale:</strong> {{ submission.verification_explanation }}
+                </div>
+
+                {% if submission.xp_awarded %}
+                <div style="margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px dashed var(--color-border); color: #047857; font-weight: 700;">
+                    ✓ Reward Status: +{{ submission.xp_awarded_amount }} XP credited to your profile!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Evidence Thumbnails Preview -->
+        <div class="evidence-preview-row">
+            <div class="evidence-thumb-card">
+                <div style="font-size: 0.8125rem; font-weight: 700; color: var(--color-text-secondary); margin-bottom: 0.35rem;">
+                    Before Condition
+                </div>
+                <img src="{{ url_for('missions.get_evidence', filename=submission.before_photo) }}"
+                     alt="Before photo">
+            </div>
+
+            <div class="evidence-thumb-card">
+                <div style="font-size: 0.8125rem; font-weight: 700; color: var(--color-text-secondary); margin-bottom: 0.35rem;">
+                    After Condition
+                </div>
+                <img src="{{ url_for('missions.get_evidence', filename=submission.after_photo) }}"
+                     alt="After photo">
+            </div>
+
+            {% if submission.video_path %}
+            <div class="evidence-thumb-card">
+                <div style="font-size: 0.8125rem; font-weight: 700; color: var(--color-text-secondary); margin-bottom: 0.35rem;">
+                    Video Walkthrough
+                </div>
+                <video src="{{ url_for('missions.get_evidence', filename=submission.video_path) }}" controls playsinline></video>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Telemetry Details Table -->
+        <div style="text-align: left; background-color: var(--color-bg); border: 1px solid var(--color-border); border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 2rem;">
+            <div style="font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; color: var(--color-text-secondary); margin-bottom: 0.75rem;">
+                Submission Metadata
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; font-size: 0.875rem;">
+                <div>
+                    <span style="color: var(--color-text-muted);">Submitted (Server UTC):</span><br>
+                    <strong>{{ submission.submitted_at }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--color-text-muted);">GPS Coordinates:</span><br>
+                    <strong>
+                        {% if submission.latitude and submission.longitude %}
+                        {{ submission.latitude }}° N, {{ submission.longitude }}° E (±{{ submission.location_accuracy|int }}m)
+                        {% else %}
+                        Location marked unavailable
+                        {% endif %}
+                    </strong>
+                </div>
+                <div>
+                    <span style="color: var(--color-text-muted);">Mission Reward:</span><br>
+                    <strong style="color: var(--color-primary-dark);">
+                        {% if submission.xp_awarded %}
+                        +{{ submission.xp_awarded_amount }} XP Awarded!
+                        {% else %}
+                        +{{ mission.xp_reward }} XP (Awarded on Verification)
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+            <div style="margin-top: 1rem; border-top: 1px dashed var(--color-border); padding-top: 0.75rem;">
+                <span style="color: var(--color-text-muted); font-size: 0.8125rem;">Fieldwork Description:</span>
+                <p style="margin: 0.25rem 0 0; color: var(--color-text); font-size: 0.9rem;">
+                    "{{ submission.description }}"
+                </p>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('missions.list_submissions') }}" class="btn btn-secondary">
+                📋 View All My Submissions
+            </a>
+            <a href="{{ url_for('missions.my_missions') }}" class="btn btn-outline">
+                My Environmental Quests
+            </a>
+            <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary">
+                Browse Next Mission →
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

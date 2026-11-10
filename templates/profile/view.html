@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.full_name }} — Profile · EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+
+    {# Profile Header Card #}
+    <div class="profile-header-card">
+        <img src="{{ user.avatar_url }}" alt="{{ user.full_name }}" class="profile-big-avatar" />
+        <div class="profile-header-details">
+            <h1 class="profile-name">{{ user.full_name }}</h1>
+            <p class="profile-role-tag">{{ user.college }} &middot; {{ user.city }}</p>
+            
+            <div class="profile-badges-row">
+                {% if user.email_verified %}
+                    <span class="badge badge-success">✓ Email Verified</span>
+                {% else %}
+                    <a href="{{ url_for('auth.verify_otp') }}" class="badge badge-warning" style="text-decoration: none;">
+                        ⚠ Email Unverified — Verify Now
+                    </a>
+                {% endif %}
+
+                {% if user.phone_verified %}
+                    <span class="badge badge-success">✓ Phone Verified</span>
+                {% else %}
+                    <span class="badge badge-neutral" title="SMS verification integration ready">📱 Phone Pending</span>
+                {% endif %}
+
+                <span class="badge badge-primary">⚡ Active Member</span>
+            </div>
+        </div>
+    </div>
+
+    {# Gamification & Impact Overview Cards #}
+    {% if level_info %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: var(--space-6);">
+        <div class="profile-detail-card" style="background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%); border-color: var(--color-primary-light);">
+            <div class="profile-detail-label">Current Tier</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: var(--color-primary-dark); margin-top: 0.25rem;">
+                {{ level_info.icon }} Lvl {{ level_info.level_number }}: {{ level_info.title }}
+            </div>
+            <div class="caption">{{ level_info.progress_pct }}% to next level</div>
+        </div>
+
+        <div class="profile-detail-card">
+            <div class="profile-detail-label">Total Verified XP</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: var(--color-primary); margin-top: 0.25rem;">
+                ⚡ {{ user.total_xp or 0 }} XP
+            </div>
+            <div class="caption">Audit verified points</div>
+        </div>
+
+        <div class="profile-detail-card">
+            <div class="profile-detail-label">Daily Action Streak</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: #D97706; margin-top: 0.25rem;">
+                🔥 {{ streak.current_streak if streak else 0 }} Days
+            </div>
+            <div class="caption">Longest: {{ streak.longest_streak if streak else 0 }} days</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Profile Information Details Grid #}
+    <div class="profile-details-grid">
+        <div class="profile-detail-card">
+            <div class="profile-detail-label">Email Address</div>
+            <div class="profile-detail-value">{{ user.email }}</div>
+        </div>
+
+        <div class="profile-detail-card">
+            <div class="profile-detail-label">Phone Number</div>
+            <div class="profile-detail-value">{{ user.phone }}</div>
+        </div>
+
+        <div class="profile-detail-card">
+            <div class="profile-detail-label">City</div>
+            <div class="profile-detail-value">{{ user.city }}</div>
+        </div>
+
+        <div class="profile-detail-card">
+            <div class="profile-detail-label">College / Organization</div>
+            <div class="profile-detail-value">{{ user.college }}</div>
+        </div>
+    </div>
+
+    {# Achievement Badges Showcase #}
+    {% if badges %}
+    <div class="card mb-6" style="padding: var(--space-6); background: var(--color-white); border-radius: var(--radius-xl); border: 1px solid var(--color-border); margin-top: var(--space-6);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <h2 style="font-size: var(--text-lg); font-weight: 700; color: var(--color-text); margin: 0;">
+                    🏅 Environmental Badges
+                </h2>
+                <div class="caption">Milestones achieved on your sustainability journey</div>
+            </div>
+            <span class="badge badge-primary">{{ badges.total_earned }} / {{ badges.total_available }} Unlocked</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.85rem;">
+            {% for b in badges.earned_badges %}
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0.85rem; border-radius: var(--radius-lg); background-color: #F0FDF4; border: 1.5px solid #86EFAC;">
+                <div style="font-size: 2rem; line-height: 1;">{{ b.icon }}</div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <strong style="color: #166534; font-size: 0.9rem;">{{ b.name }}</strong>
+                        <span class="badge badge-success" style="font-size: 0.65rem; padding: 0.1rem 0.35rem;">Earned</span>
+                    </div>
+                    <div style="font-size: 0.78rem; color: #15803D; margin: 0.15rem 0;">{{ b.description }}</div>
+                    <span class="caption" style="color: #166534; font-size: 0.7rem;">Unlocked {{ b.awarded_at }}</span>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% for b in badges.locked_badges %}
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0.85rem; border-radius: var(--radius-lg); background-color: #F8FAFC; border: 1px dashed #CBD5E1; opacity: 0.7;">
+                <div style="font-size: 2rem; line-height: 1; filter: grayscale(100%); opacity: 0.5;">{{ b.icon }}</div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <strong style="color: #64748B; font-size: 0.9rem;">{{ b.name }}</strong>
+                        <span class="badge badge-neutral" style="font-size: 0.65rem; padding: 0.1rem 0.35rem;">🔒 Locked</span>
+                    </div>
+                    <div style="font-size: 0.78rem; color: #64748B; margin: 0.15rem 0;">{{ b.description }}</div>
+                    <span class="caption" style="color: #94A3B8; font-size: 0.7rem;">Target: {{ b.requirement_description }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Action Buttons #}
+    <div class="profile-actions-bar">
+        <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+            <a href="{{ url_for('profile.edit_profile') }}" class="btn btn-secondary">
+                ✏️ Edit Profile
+            </a>
+            <a href="{{ url_for('missions.mission_history') }}" class="btn btn-secondary">
+                📜 Mission History
+            </a>
+            <a href="{{ url_for('profile.change_password') }}" class="btn btn-secondary">
+                🔑 Change Password
+            </a>
+            <a href="{{ url_for('dashboard.overview') }}" class="btn btn-primary">
+                📊 Open Dashboard
+            </a>
+        </div>
+        <div>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline" style="border-color: var(--color-error); color: var(--color-error);">
+                Sign Out
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

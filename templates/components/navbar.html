@@ -1,0 +1,97 @@
+{# ============================================================
+   EcoQuest — Navigation Bar
+   ============================================================
+   Include in base.html with: {% include "components/navbar.html" %}
+   Dynamically adapts for logged-in and logged-out members.
+   ============================================================ #}
+
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+
+        {# --- Logo --- #}
+        <a href="{{ url_for('main.index') }}" class="navbar-brand" aria-label="EcoQuest Home">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="16" cy="16" r="15" stroke="#059669" stroke-width="2"/>
+                <path d="M16 7C16 7 10 13 10 18C10 21.3 12.7 24 16 24C19.3 24 22 21.3 22 18C22 13 16 7 16 7Z" fill="#059669"/>
+                <path d="M16 12V20M13 17H19" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span>EcoQuest</span>
+        </a>
+
+        {# --- Desktop links --- #}
+        <div class="navbar-links">
+            <a href="{{ url_for('main.index') }}"
+               class="nav-link{% if request.endpoint == 'main.index' %} active{% endif %}">Home</a>
+            <a href="{{ url_for('learning.modules') }}"
+               class="nav-link{% if request.blueprint == 'learning' %} active{% endif %}">Learn</a>
+            <a href="{{ url_for('missions.list_missions') }}"
+               class="nav-link{% if request.blueprint == 'missions' %} active{% endif %}">Missions</a>
+            <a href="{{ url_for('main.index') }}#impact"
+               class="nav-link">Impact</a>
+            <a href="{{ url_for('leaderboard.rankings') }}"
+               class="nav-link{% if request.blueprint == 'leaderboard' %} active{% endif %}">Leaderboard</a>
+            {% if current_user %}
+            <a href="{{ url_for('dashboard.overview') }}"
+               class="nav-link{% if request.blueprint == 'dashboard' %} active{% endif %}">Dashboard</a>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('admin.list_reviews') }}"
+               class="nav-link{% if request.blueprint == 'admin' %} active{% endif %}"
+               style="color: #B45309; font-weight: 700;">Admin</a>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        {# --- Auth buttons (desktop) --- #}
+        <div class="navbar-auth">
+            {% if current_user %}
+                <a href="{{ url_for('profile.view_profile') }}"
+                   class="nav-link{% if request.blueprint == 'profile' %} active{% endif %}"
+                   style="display: flex; align-items: center; gap: 0.5rem;">
+                    <img src="{{ current_user.avatar_url }}" alt="{{ current_user.full_name }}"
+                         style="width: 1.75rem; height: 1.75rem; border-radius: 50%; object-fit: cover; border: 1px solid var(--color-border);" />
+                    <span>Profile</span>
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-sm">Log in</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Sign Up</a>
+            {% endif %}
+        </div>
+
+        {# --- Mobile hamburger --- #}
+        <button
+            id="navbar-toggle"
+            class="navbar-toggle"
+            aria-label="Toggle navigation menu"
+            aria-expanded="false"
+            aria-controls="navbar-mobile"
+        >
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </div>
+
+    {# --- Mobile slide-down menu --- #}
+    <div id="navbar-mobile" class="navbar-menu-mobile" role="menu">
+        <a href="{{ url_for('main.index') }}" role="menuitem">Home</a>
+        <a href="{{ url_for('learning.modules') }}" role="menuitem">Learn</a>
+        <a href="{{ url_for('missions.list_missions') }}" role="menuitem">Missions</a>
+        <a href="{{ url_for('main.index') }}#impact" role="menuitem">Impact</a>
+        <a href="{{ url_for('leaderboard.rankings') }}" role="menuitem">Leaderboard</a>
+        
+        <div class="navbar-mobile-auth">
+            {% if current_user %}
+                <a href="{{ url_for('dashboard.overview') }}" class="btn btn-secondary btn-block" role="menuitem">Dashboard</a>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.list_reviews') }}" class="btn btn-outline btn-block" style="border-color: #F59E0B; color: #B45309;" role="menuitem">🛡️ Admin Console</a>
+                {% endif %}
+                <a href="{{ url_for('profile.view_profile') }}" class="btn btn-secondary btn-block" role="menuitem">Profile ({{ current_user.full_name }})</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-block" role="menuitem">Logout</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-block" role="menuitem">Login</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-block" role="menuitem">Sign Up</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import button, badge, xp_display, progress_bar, section_header %}
+
+{% block title %}EcoQuest — Turn Environmental Knowledge Into Real-World Action{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- =========================================================
+     1. HERO SECTION
+     ========================================================= -->
+<section class="hero-section" aria-label="Hero section">
+    <div class="container">
+        <div class="hero-grid">
+            
+            {# Left Column: Copy & Actions #}
+            <div>
+                <div class="hero-badge">
+                    <span class="badge badge-primary">
+                        <span class="badge-dot"></span> Environmental Action Platform
+                    </span>
+                </div>
+
+                <h1 class="hero-title">
+                    Turn Environmental Knowledge Into <span class="text-highlight">Real-World Action.</span>
+                </h1>
+
+                <p class="hero-description">
+                    Learn practical eco concepts, complete hands-on missions, upload proof, verify your impact, and compete with your community.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                        Start Your Eco Journey
+                    </a>
+                    <a href="{{ url_for('missions.list_missions') }}" class="btn btn-secondary btn-lg">
+                        Explore Missions
+                    </a>
+                </div>
+
+                <div class="hero-trust-bar">
+                    <div class="hero-trust-item">
+                        <span class="hero-trust-icon">✓</span>
+                        <span>AI & Peer Verified</span>
+                    </div>
+                    <div class="hero-trust-item">
+                        <span class="hero-trust-icon">⚡</span>
+                        <span>Gamified Community XP</span>
+                    </div>
+                    <div class="hero-trust-item">
+                        <span class="hero-trust-icon">🌱</span>
+                        <span>Measurable Impact</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Right Column: Environmental-Tech Dashboard Preview #}
+            <div class="preview-container">
+                <div class="preview-card" aria-label="EcoQuest Member Dashboard Preview">
+                    
+                    {# Top Bar #}
+                    <div class="preview-top-bar">
+                        <div class="preview-status">
+                            <span class="preview-status-dot"></span>
+                            <span>Live Action Feed</span>
+                        </div>
+                        <span class="badge badge-neutral">Demo Preview</span>
+                    </div>
+
+                    {# User Profile Summary #}
+                    <div class="preview-user">
+                        <div class="preview-avatar" aria-hidden="true">AV</div>
+                        <div class="preview-user-info">
+                            <h4>Alex Vance</h4>
+                            <span>Eco Vanguard · Level 4 Member</span>
+                        </div>
+                    </div>
+
+                    {# Level Progress Bar #}
+                    <div class="mb-4">
+                        {{ progress_bar(72, label="Level 4 Progress (720 / 1,000 XP)", variant="success") }}
+                    </div>
+
+                    {# 4 Core Metrics #}
+                    <div class="preview-metrics-grid">
+                        <div class="preview-metric-box">
+                            <div class="preview-metric-header">
+                                <span class="preview-metric-label">Verified Missions</span>
+                                <span class="badge badge-success">✓</span>
+                            </div>
+                            <div class="preview-metric-val text-green">18</div>
+                            <span class="caption">Missions completed</span>
+                        </div>
+
+                        <div class="preview-metric-box">
+                            <div class="preview-metric-header">
+                                <span class="preview-metric-label">XP Earned</span>
+                                <span class="badge badge-primary">⚡</span>
+                            </div>
+                            <div class="preview-metric-val">2,450</div>
+                            <span class="caption">Rank #12 local</span>
+                        </div>
+
+                        <div class="preview-metric-box">
+                            <div class="preview-metric-header">
+                                <span class="preview-metric-label">Waste Collected</span>
+                                <span class="badge badge-info">♻</span>
+                            </div>
+                            <div class="preview-metric-val">42.5 kg</div>
+                            <span class="caption">Sorted & recycled</span>
+                        </div>
+
+                        <div class="preview-metric-box">
+                            <div class="preview-metric-header">
+                                <span class="preview-metric-label">Trees Planted</span>
+                                <span class="badge badge-success">🌲</span>
+                            </div>
+                            <div class="preview-metric-val text-green">14</div>
+                            <span class="caption">Native species</span>
+                        </div>
+                    </div>
+
+                    {# Verification Activity Feed Snippet #}
+                    <div class="preview-verification-feed">
+                        <span class="preview-feed-icon">📸</span>
+                        <div class="preview-feed-text">
+                            <strong>Latest verification approved:</strong><br>
+                            Beach Cleanup mission geo-verified (+150 XP awarded).
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- =========================================================
+     2. PROBLEM SECTION
+     ========================================================= -->
+<section class="problem-section" aria-label="The Environmental Action Problem">
+    <div class="container">
+        {{ section_header(
+            title="Awareness Alone Isn't Enough.",
+            subtitle="Billions read about climate change every day, yet individual actions remain fragmented, unmeasured, and disconnected from genuine collective momentum.",
+            overline="The Challenge",
+            centered=true
+        ) }}
+
+        <div class="problem-grid">
+            {# Dilemma Card #}
+            <div class="problem-card card-dilemma">
+                <div class="problem-card-header">
+                    <span class="problem-icon-pill">✕</span>
+                    <h3>Passive Awareness</h3>
+                </div>
+                <p class="text-secondary text-sm">
+                    Conventional environmental outreach emphasizes knowledge and alarming news headlines, but leaves people with no clear roadmap for verifiable daily contribution.
+                </p>
+                <div class="problem-list">
+                    <div class="problem-item">
+                        <span class="problem-item-icon">✕</span>
+                        <span>Overwhelming information without tangible steps.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-item-icon">✕</span>
+                        <span>Zero proof or accountability for claimed actions.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-item-icon">✕</span>
+                        <span>Isolated efforts that feel insignificant alone.</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Solution Card #}
+            <div class="problem-card card-solution">
+                <div class="problem-card-header">
+                    <span class="problem-icon-pill">✓</span>
+                    <h3>The EcoQuest Protocol</h3>
+                </div>
+                <p class="text-secondary text-sm">
+                    We bridge the intention-action gap by turning environmental learning directly into structured, verified, community-backed missions with measurable outcomes.
+                </p>
+                <div class="problem-list">
+                    <div class="problem-item">
+                        <span class="problem-item-icon">✓</span>
+                        <span>Hands-on micro-missions designed for real-world impact.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-item-icon">✓</span>
+                        <span>Photo, geolocation, and AI-powered verification.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-item-icon">✓</span>
+                        <span>Community recognition, gamified XP, and verified metrics.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- =========================================================
+     3. HOW IT WORKS (6 STEPS)
+     ========================================================= -->
+<section class="how-it-works-section" aria-label="How EcoQuest works">
+    <div class="container">
+        {{ section_header(
+            title="How EcoQuest Works",
+            subtitle="A six-stage cycle designed to transform climate mindfulness into verified, rewarding, and lasting ecological change.",
+            overline="The Platform",
+            centered=true
+        ) }}
+
+        <div class="steps-grid">
+            
+            {# Step 1: Learn #}
+            <div class="step-card">
+                <span class="step-number-pill">01</span>
+                <div class="step-icon-wrapper">📖</div>
+                <h3 class="step-title">1. Learn</h3>
+                <p class="step-desc">
+                    Discover bite-sized environmental concepts, biodiversity fundamentals, and sustainable lifestyle practices.
+                </p>
+            </div>
+
+            {# Step 2: Act #}
+            <div class="step-card">
+                <span class="step-number-pill">02</span>
+                <div class="step-icon-wrapper">🎯</div>
+                <h3 class="step-title">2. Act</h3>
+                <p class="step-desc">
+                    Find and accept curated real-world eco missions tailored to your local surroundings and personal schedule.
+                </p>
+            </div>
+
+            {# Step 3: Verify #}
+            <div class="step-card">
+                <span class="step-number-pill">03</span>
+                <div class="step-icon-wrapper">🔍</div>
+                <h3 class="step-title">3. Verify</h3>
+                <p class="step-desc">
+                    Submit photo or video proof with timestamp and geo-location for automated AI inspection and community review.
+                </p>
+            </div>
+
+            {# Step 4: Earn #}
+            <div class="step-card">
+                <span class="step-number-pill">04</span>
+                <div class="step-icon-wrapper">⚡</div>
+                <h3 class="step-title">4. Earn</h3>
+                <p class="step-desc">
+                    Receive verified XP, unlock tiered achievement badges, and level up your eco adventurer profile.
+                </p>
+            </div>
+
+            {# Step 5: Compete #}
+            <div class="step-card">
+                <span class="step-number-pill">05</span>
+                <div class="step-icon-wrapper">🏆</div>
+                <h3 class="step-title">5. Compete</h3>
+                <p class="step-desc">
+                    Climb community, city, and global leaderboards alongside friends, schools, and civic organizations.
+                </p>
+            </div>
+
+            {# Step 6: Impact #}
+            <div class="step-card">
+                <span class="step-number-pill">06</span>
+                <div class="step-icon-wrapper">🌍</div>
+                <h3 class="step-title">6. Impact</h3>
+                <p class="step-desc">
+                    Aggregate verified contributions into transparent ecological data dashboards that drive planetary change.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- =========================================================
+     4. FEATURED MISSIONS
+     ========================================================= -->
+<section class="missions-section" aria-label="Featured missions">
+    <div class="container">
+        {{ section_header(
+            title="Featured Community Missions",
+            subtitle="Pick an action, step outside, record your evidence, and earn verified recognition.",
+            overline="Get Started",
+            centered=true
+        ) }}
+
+        <div class="grid grid-3">
+            
+            {# Mission 1: Clean a Public Area #}
+            <div class="mission-card">
+                <div class="mission-media">
+                    <img src="{{ url_for('static', filename='images/mission-cleanup.svg') }}"
+                         alt="Illustration of volunteers cleaning up a public park"
+                         loading="lazy" width="600" height="340">
+                </div>
+                <div class="mission-body">
+                    <div class="mission-meta-bar">
+                        <span class="badge badge-success">Intermediate</span>
+                        {{ xp_display(150) }}
+                    </div>
+                    <h3 class="mission-title">Clean a Public Area</h3>
+                    <p class="mission-desc">
+                        Identify and remove litter from a local park, beachfront, or trail. Submit before-and-after photo verification.
+                    </p>
+                    <div class="mission-footer">
+                        <span class="caption">Est. 45 mins · Outdoor</span>
+                        <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary btn-sm">
+                            View Mission
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {# Mission 2: Plant a Native Tree #}
+            <div class="mission-card">
+                <div class="mission-media">
+                    <img src="{{ url_for('static', filename='images/mission-tree.svg') }}"
+                         alt="Illustration of a native sapling being planted and watered"
+                         loading="lazy" width="600" height="340">
+                </div>
+                <div class="mission-body">
+                    <div class="mission-meta-bar">
+                        <span class="badge badge-primary">Moderate</span>
+                        {{ xp_display(250) }}
+                    </div>
+                    <h3 class="mission-title">Plant a Native Tree</h3>
+                    <p class="mission-desc">
+                        Plant an indigenous tree species suited to your regional ecosystem and record its species name and coordinates.
+                    </p>
+                    <div class="mission-footer">
+                        <span class="caption">Est. 60 mins · Nature</span>
+                        <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary btn-sm">
+                            View Mission
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {# Mission 3: Collect Recyclable Waste #}
+            <div class="mission-card">
+                <div class="mission-media">
+                    <img src="{{ url_for('static', filename='images/mission-recycling.svg') }}"
+                         alt="Illustration of sorted recyclable bins and containers"
+                         loading="lazy" width="600" height="340">
+                </div>
+                <div class="mission-body">
+                    <div class="mission-meta-bar">
+                        <span class="badge badge-neutral">Beginner</span>
+                        {{ xp_display(100) }}
+                    </div>
+                    <h3 class="mission-title">Collect Recyclable Waste</h3>
+                    <p class="mission-desc">
+                        Collect, clean, and properly sort at least 5 kg of household or community plastics, glass, or metals for recycling.
+                    </p>
+                    <div class="mission-footer">
+                        <span class="caption">Est. 30 mins · Daily Habit</span>
+                        <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary btn-sm">
+                            View Mission
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {# Explore All Missions CTA #}
+        <div class="text-center mt-8">
+            <a href="{{ url_for('missions.list_missions') }}" class="btn btn-secondary btn-lg">
+                Explore All Missions →
+            </a>
+        </div>
+    </div>
+</section>
+
+
+<!-- =========================================================
+     5. ENVIRONMENTAL IMPACT PREVIEW
+     ========================================================= -->
+<section id="impact" class="impact-section" aria-label="Environmental impact preview">
+    <div class="container text-center">
+        
+        <div class="impact-notice-banner">
+            <span>ℹ</span>
+            <span>Illustrative Platform Preview &middot; Prototype Community Pilot Data</span>
+        </div>
+
+        {{ section_header(
+            title="Real-World Environmental Metrics",
+            subtitle="Transparent, verified action totals recorded across our prototype missions and community challenges.",
+            overline="Community Impact",
+            centered=true
+        ) }}
+
+        <div class="impact-grid">
+            
+            {# Metric 1: Verified Missions #}
+            <div class="impact-stat-card">
+                <span class="impact-stat-icon">✓</span>
+                <div class="impact-stat-number">1,420+</div>
+                <div class="impact-stat-label">Verified Missions</div>
+                <div class="impact-stat-sub">Completed with photo/geo validation</div>
+            </div>
+
+            {# Metric 2: Waste Collected #}
+            <div class="impact-stat-card">
+                <span class="impact-stat-icon">♻</span>
+                <div class="impact-stat-number">3,850 kg</div>
+                <div class="impact-stat-label">Waste Collected</div>
+                <div class="impact-stat-sub">Diverted from waterways & landfills</div>
+            </div>
+
+            {# Metric 3: Trees Planted #}
+            <div class="impact-stat-card">
+                <span class="impact-stat-icon">🌱</span>
+                <div class="impact-stat-number">890+</div>
+                <div class="impact-stat-label">Trees Planted</div>
+                <div class="impact-stat-sub">Native species logged with GPS</div>
+            </div>
+
+            {# Metric 4: Volunteer Hours #}
+            <div class="impact-stat-card">
+                <span class="impact-stat-icon">⏱</span>
+                <div class="impact-stat-number">2,150 hrs</div>
+                <div class="impact-stat-label">Volunteer Hours</div>
+                <div class="impact-stat-sub">Dedicated to local community projects</div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- =========================================================
+     6. FINAL CALL TO ACTION
+     ========================================================= -->
+<section class="cta-section" aria-label="Call to action">
+    <div class="container">
+        <div class="cta-box">
+            <h2 class="cta-title">Your Actions Can Make a Difference.</h2>
+            <p class="cta-desc">
+                Start small. Take action. Create measurable change. Join thousands turning environmental consciousness into verified reality.
+            </p>
+            <div>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                    Join EcoQuest
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

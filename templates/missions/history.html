@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}My Mission History — EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/missions.css') }}">
+<style>
+.history-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+}
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+.history-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.history-stat-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.history-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.history-stat-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+}
+.history-stat-val {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-top: 0.25rem;
+    color: var(--color-text);
+}
+.history-filter-bar {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+.history-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-white);
+    color: var(--color-text-secondary);
+    transition: all 0.15s ease;
+}
+.history-filter-pill:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+.history-filter-pill.active {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+}
+.history-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: grid;
+    grid-template-columns: 140px 1fr auto;
+    gap: 1.5rem;
+    align-items: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.history-card:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    border-color: #cbd5e1;
+}
+.history-thumb-box {
+    width: 140px;
+    height: 110px;
+    border-radius: 0.625rem;
+    overflow: hidden;
+    background-color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 1px solid var(--color-border);
+}
+.history-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.history-thumb-fallback {
+    font-size: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+.badge-verified {
+    background-color: #ECFDF5;
+    color: #047857;
+    border: 1px solid #A7F3D0;
+}
+.badge-review {
+    background-color: #FFFBEB;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+}
+.badge-rejected {
+    background-color: #FEF2F2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+}
+.badge-progress {
+    background-color: #EFF6FF;
+    color: #1D4ED8;
+    border: 1px solid #BFDBFE;
+}
+.badge-withdrawn {
+    background-color: #F1F5F9;
+    color: #475569;
+    border: 1px solid #CBD5E1;
+}
+.history-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    margin-top: 0.5rem;
+}
+.history-meta-item strong {
+    color: var(--color-text);
+}
+@media (max-width: 820px) {
+    .history-card {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    .history-thumb-box {
+        width: 100%;
+        height: 180px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <!-- Header -->
+    <div class="history-header">
+        <div>
+            <span class="missions-hero-pill" style="background-color: #ECFDF5; color: #047857; font-weight: 700; padding: 0.3rem 0.85rem; border-radius: 9999px; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <span>📜</span> Environmental Mission Audit Ledger
+            </span>
+            <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--color-text); margin: 0.5rem 0 0.25rem;">
+                Mission History
+            </h1>
+            <p style="color: var(--color-text-secondary); font-size: 1rem; margin: 0; max-width: 650px;">
+                Review all your completed environmental missions, pending proofs, and active quests with verified camera records.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="{{ url_for('missions.my_missions') }}" class="btn btn-secondary" style="padding: 0.6rem 1.1rem; border-radius: 0.5rem; font-weight: 600; text-decoration: none;">
+                🎯 Active Quests
+            </a>
+            <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary" style="padding: 0.6rem 1.1rem; border-radius: 0.5rem; font-weight: 600; text-decoration: none;">
+                + Explore Missions
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Bar -->
+    <div class="history-stats-grid">
+        <div class="history-stat-card">
+            <div class="history-stat-label">Total Missions</div>
+            <div class="history-stat-val">{{ counts.total }}</div>
+        </div>
+        <div class="history-stat-card" style="border-left: 3px solid #059669;">
+            <div class="history-stat-label" style="color: #047857;">Completed (Verified)</div>
+            <div class="history-stat-val" style="color: #059669;">{{ counts.completed }}</div>
+        </div>
+        <div class="history-stat-card" style="border-left: 3px solid #D97706;">
+            <div class="history-stat-label" style="color: #B45309;">Under Review</div>
+            <div class="history-stat-val" style="color: #D97706;">{{ counts.under_review }}</div>
+        </div>
+        <div class="history-stat-card" style="border-left: 3px solid #DC2626;">
+            <div class="history-stat-label" style="color: #991B1B;">Rejected</div>
+            <div class="history-stat-val" style="color: #DC2626;">{{ counts.rejected }}</div>
+        </div>
+        <div class="history-stat-card" style="border-left: 3px solid #2563EB;">
+            <div class="history-stat-label" style="color: #1D4ED8;">In Progress</div>
+            <div class="history-stat-val" style="color: #2563EB;">{{ counts.in_progress }}</div>
+        </div>
+        <div class="history-stat-card" style="border-left: 3px solid #64748B;">
+            <div class="history-stat-label" style="color: #475569;">Withdrawn</div>
+            <div class="history-stat-val" style="color: #64748B;">{{ counts.withdrawn or 0 }}</div>
+        </div>
+    </div>
+
+    <!-- Status Filters -->
+    <div class="history-filter-bar">
+        <a href="{{ url_for('missions.mission_history', status='all') }}" class="history-filter-pill {% if active_filter == 'all' %}active{% endif %}">
+            All ({{ counts.total }})
+        </a>
+        <a href="{{ url_for('missions.mission_history', status='completed') }}" class="history-filter-pill {% if active_filter in ['completed', 'verified'] %}active{% endif %}">
+            ✓ Completed ({{ counts.completed }})
+        </a>
+        <a href="{{ url_for('missions.mission_history', status='under_review') }}" class="history-filter-pill {% if active_filter in ['under_review', 'under-review', 'review'] %}active{% endif %}">
+            ⏳ Under Review ({{ counts.under_review }})
+        </a>
+        <a href="{{ url_for('missions.mission_history', status='rejected') }}" class="history-filter-pill {% if active_filter == 'rejected' %}active{% endif %}">
+            ✕ Rejected ({{ counts.rejected }})
+        </a>
+        <a href="{{ url_for('missions.mission_history', status='in_progress') }}" class="history-filter-pill {% if active_filter in ['in_progress', 'in-progress'] %}active{% endif %}">
+            🚀 In Progress ({{ counts.in_progress }})
+        </a>
+        <a href="{{ url_for('missions.mission_history', status='withdrawn') }}" class="history-filter-pill {% if active_filter == 'withdrawn' %}active{% endif %}">
+            ↩️ Withdrawn ({{ counts.withdrawn or 0 }})
+        </a>
+    </div>
+
+    <!-- Mission Cards List -->
+    {% if items %}
+    <div class="history-list">
+        {% for item in items %}
+        <article class="history-card" id="mission-item-{{ item.submission_id or item.mission_id }}">
+            <!-- Thumbnail of submitted proof -->
+            <div class="history-thumb-box">
+                {% if item.thumbnail_url %}
+                <img src="{{ item.thumbnail_url }}" alt="Proof thumbnail for {{ item.mission_title }}" class="history-thumb-img" loading="lazy">
+                {% else %}
+                <div class="history-thumb-fallback">
+                    {{ item.mission_icon }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Card Content -->
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                    <span style="font-size: 0.75rem; font-weight: 800; background-color: var(--color-primary-light); color: var(--color-primary-dark); padding: 0.2rem 0.55rem; border-radius: 9999px;">
+                        {{ item.reference_id }}
+                    </span>
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: var(--color-primary);">
+                        {{ item.mission_category }}
+                    </span>
+                </div>
+
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--color-text); margin: 0 0 0.5rem;">
+                    {{ item.mission_title }}
+                </h2>
+
+                <div class="history-meta-row">
+                    <div class="history-meta-item">
+                        <span>Accepted:</span> <strong>{{ item.date_accepted }}</strong>
+                    </div>
+                    <div class="history-meta-item">
+                        <span>Submitted:</span> <strong>{{ item.submission_date }}</strong>
+                    </div>
+                    <div class="history-meta-item">
+                        <span>XP Earned:</span> <strong style="color: {% if item.xp_earned > 0 %}#047857{% else %}var(--color-text-muted){% endif %};">+{{ item.xp_earned }} XP</strong>
+                    </div>
+                    <div class="history-meta-item">
+                        <span>Progress:</span> <strong>{{ item.mission_completion_status }}</strong>
+                    </div>
+                </div>
+
+                <!-- Field action notes -->
+                {% if item.description %}
+                <p style="margin: 0.5rem 0 0; font-size: 0.875rem; color: #334155; line-height: 1.45; font-style: italic;">
+                    "{{ item.description }}"
+                </p>
+                {% endif %}
+
+                <!-- Short explanation / feedback if available -->
+                {% if item.verification_explanation %}
+                <p style="margin: 0.5rem 0 0; font-size: 0.875rem; color: #475569; line-height: 1.45; max-width: 600px;">
+                    {{ item.verification_explanation|truncate(140) }}
+                </p>
+                {% endif %}
+            </div>
+
+            <!-- Status & Action CTA -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0.75rem; min-width: 160px;">
+                <!-- Status Badge -->
+                {% if item.verification_status == 'Verified' %}
+                <span class="badge-status badge-verified">
+                    <span>✓</span> Verified (+{{ item.xp_earned }} XP)
+                </span>
+                {% elif item.verification_status == 'Withdrawn' %}
+                <span class="badge-status badge-withdrawn">
+                    <span>↩️</span> Withdrawn
+                </span>
+                {% elif item.verification_status == 'Rejected' %}
+                <span class="badge-status badge-rejected">
+                    <span>✕</span> Rejected
+                </span>
+                {% elif item.verification_status in ['Manual Review', 'Requires Manual Review'] %}
+                <span class="badge-status badge-review">
+                    <span>⚠️</span> Manual Review
+                </span>
+                {% elif item.verification_status == 'In Progress' %}
+                <span class="badge-status badge-progress">
+                    <span>🚀</span> In Progress
+                </span>
+                {% else %}
+                <span class="badge-status badge-review">
+                    <span>⏳</span> {{ item.verification_status }}
+                </span>
+                {% endif %}
+
+                <!-- Action Button -->
+                {% if item.has_submission %}
+                <a href="{{ url_for('missions.view_submission_detail', submission_id=item.submission_id) }}" class="btn btn-outline" style="padding: 0.45rem 1rem; font-size: 0.875rem; font-weight: 700; text-decoration: none;">
+                    View Details →
+                </a>
+                {% elif item.verification_status == 'Withdrawn' %}
+                <a href="{{ url_for('missions.view_mission', identifier=item.mission_slug) }}" class="btn btn-outline" style="padding: 0.45rem 1rem; font-size: 0.875rem; font-weight: 700; text-decoration: none;">
+                    View Mission →
+                </a>
+                {% else %}
+                <a href="{{ url_for('missions.submit_proof', identifier=item.mission_slug) }}" class="btn btn-primary" style="padding: 0.45rem 1rem; font-size: 0.875rem; font-weight: 700; text-decoration: none;">
+                    Submit Proof 📸
+                </a>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Honest Empty State -->
+    <div style="text-align: center; padding: 4.5rem 1.5rem; background-color: var(--color-white); border-radius: 1rem; border: 1px dashed var(--color-border); margin-top: 1rem;">
+        <div style="font-size: 3.5rem; margin-bottom: 1rem;">📜</div>
+        <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--color-text); margin-bottom: 0.5rem;">
+            No proof submissions yet
+        </h3>
+        <p style="color: var(--color-text-secondary); max-width: 480px; margin: 0 auto 1.5rem; line-height: 1.6; font-size: 0.95rem;">
+            {% if active_filter != 'all' %}
+            You don't have any missions matching the "{{ active_filter|replace('_', ' ')|title }}" filter right now.
+            {% else %}
+            You haven't participated in any missions yet. Accept a mission from the catalog, carry out real-world environmental action, and submit camera proof!
+            {% endif %}
+        </p>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            {% if active_filter != 'all' %}
+            <a href="{{ url_for('missions.mission_history', status='all') }}" class="btn btn-secondary">
+                View All Missions
+            </a>
+            {% endif %}
+            <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary">
+                Explore Available Missions
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

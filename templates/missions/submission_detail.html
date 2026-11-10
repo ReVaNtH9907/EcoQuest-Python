@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+
+{% block title %}{{ submission.mission_title }} — Submission Details — EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/missions.css') }}">
+<style>
+.detail-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+}
+.detail-breadcrumb {
+    margin-bottom: 1.5rem;
+}
+.detail-breadcrumb a {
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.875rem;
+}
+.detail-breadcrumb a:hover {
+    text-decoration: underline;
+}
+.detail-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+.detail-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    padding: 1.75rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.detail-section-title {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+}
+.photos-comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+.photo-frame {
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background-color: #f8fafc;
+}
+.photo-frame img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+    background-color: #0f172a;
+}
+.photo-frame-caption {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-white);
+    border-top: 1px solid var(--color-border);
+}
+.timeline-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+}
+.timeline-list::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 18px;
+    width: 2px;
+    background-color: #E2E8F0;
+}
+.timeline-item {
+    position: relative;
+    padding-left: 50px;
+    padding-bottom: 1.5rem;
+}
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+.timeline-icon-bubble {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--color-white);
+    border: 2px solid var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    z-index: 1;
+}
+.badge-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+@media (max-width: 860px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    .photos-comparison-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <!-- Breadcrumb -->
+    <div class="detail-breadcrumb">
+        <a href="{{ url_for('missions.mission_history') }}">
+            ← Back to Mission History
+        </a>
+    </div>
+
+    <!-- Header Banner -->
+    <div style="background-color: var(--color-white); border: 1px solid var(--color-border); border-radius: 1rem; padding: 1.75rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                <span style="background-color: var(--color-primary-light); color: var(--color-primary-dark); font-weight: 800; font-size: 0.875rem; padding: 0.25rem 0.75rem; border-radius: 9999px;">
+                    {{ submission.reference_id }}
+                </span>
+                <span style="font-weight: 700; color: var(--color-primary); font-size: 0.875rem;">
+                    {{ submission.mission_category }}
+                </span>
+                {% if submission.is_demo_verification %}
+                <span style="background-color: #FEF3C7; color: #92400E; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 4px;">
+                    Demo Engine
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- 1. Mission Title -->
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--color-text); margin: 0 0 0.5rem;">
+                {{ submission.mission_title }}
+            </h1>
+            <p style="margin: 0; color: var(--color-text-secondary); font-size: 0.95rem; max-width: 680px; line-height: 1.5;">
+                {{ submission.mission_description }}
+            </p>
+        </div>
+
+        <!-- 8. Current Verification Status Badge -->
+        <div style="text-align: right;">
+            {% if submission.verification_status == 'Verified' %}
+            <span class="badge-detail" style="background-color: #ECFDF5; color: #047857; border: 1px solid #A7F3D0;">
+                <span>✓</span> Verified (+{{ submission.xp_awarded_amount }} XP)
+            </span>
+            {% elif submission.verification_status == 'Rejected' %}
+            <span class="badge-detail" style="background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA;">
+                <span>✕</span> Rejected (0 XP)
+            </span>
+            {% elif submission.verification_status in ['Manual Review', 'Requires Manual Review'] %}
+            <span class="badge-detail" style="background-color: #FFFBEB; color: #B45309; border: 1px solid #FDE68A;">
+                <span>⚠️</span> Manual Review Pending
+            </span>
+            {% else %}
+            <span class="badge-detail" style="background-color: #FEF3C7; color: #B45309; border: 1px solid #FDE68A;">
+                <span>⏳</span> {{ submission.verification_status }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <!-- Main Column -->
+        <div>
+            <!-- 5 & 6. Before-and-After Media & Video -->
+            <div class="detail-card">
+                <h3 class="detail-section-title">
+                    <span>📸</span> Submitted Proof Media
+                </h3>
+
+                <!-- Before & After Photos (Item 5) -->
+                <div class="photos-comparison-grid">
+                    <div class="photo-frame">
+                        {% if submission.before_photo_url %}
+                        <a href="{{ submission.before_photo_url }}" target="_blank" title="View Full High-Res Before Photo">
+                            <img src="{{ submission.before_photo_url }}" alt="Before fieldwork photo">
+                        </a>
+                        <div class="photo-frame-caption">
+                            <span>Before Photo</span>
+                            <a href="{{ submission.before_photo_url }}" target="_blank" style="color: var(--color-primary-dark); font-size: 0.75rem; text-decoration: none;">
+                                Open Full ↗
+                            </a>
+                        </div>
+                        {% else %}
+                        <div style="height: 180px; display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); font-size: 0.875rem;">
+                            No before-photo recorded
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="photo-frame">
+                        {% if submission.after_photo_url %}
+                        <a href="{{ submission.after_photo_url }}" target="_blank" title="View Full High-Res After Photo">
+                            <img src="{{ submission.after_photo_url }}" alt="After fieldwork photo">
+                        </a>
+                        <div class="photo-frame-caption">
+                            <span>After Photo</span>
+                            <a href="{{ submission.after_photo_url }}" target="_blank" style="color: var(--color-primary-dark); font-size: 0.75rem; text-decoration: none;">
+                                Open Full ↗
+                            </a>
+                        </div>
+                        {% else %}
+                        <div style="height: 180px; display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); font-size: 0.875rem;">
+                            No after-photo recorded
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 6. Optional Video Evidence -->
+                {% if submission.video_url %}
+                <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border);">
+                    <div style="font-size: 0.8125rem; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 0.5rem;">
+                        🎥 Optional Video Evidence
+                    </div>
+                    <div style="max-width: 480px; border-radius: 0.5rem; overflow: hidden; border: 1px solid var(--color-border); background-color: #000;">
+                        <video src="{{ submission.video_url }}" controls playsinline style="width: 100%; display: block;"></video>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Field Notes -->
+                <div style="margin-top: 1.25rem; background-color: var(--color-bg); border-radius: 0.5rem; padding: 1rem;">
+                    <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 0.25rem;">
+                        Member Field Notes
+                    </div>
+                    <p style="margin: 0; font-size: 0.95rem; color: var(--color-text); line-height: 1.55;">
+                        "{{ submission.field_notes }}"
+                    </p>
+                </div>
+            </div>
+
+            <!-- 7. GPS Location -->
+            <div class="detail-card">
+                <h3 class="detail-section-title">
+                    <span>📍</span> Field Location & Geolocation
+                </h3>
+                {% if submission.gps_recorded %}
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem;">
+                    <div style="background-color: var(--color-bg); padding: 0.875rem; border-radius: 0.5rem;">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">Latitude</div>
+                        <div style="font-size: 1.125rem; font-weight: 700; color: var(--color-text); margin-top: 0.25rem;">{{ submission.latitude }}° N</div>
+                    </div>
+                    <div style="background-color: var(--color-bg); padding: 0.875rem; border-radius: 0.5rem;">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">Longitude</div>
+                        <div style="font-size: 1.125rem; font-weight: 700; color: var(--color-text); margin-top: 0.25rem;">{{ submission.longitude }}° E</div>
+                    </div>
+                    <div style="background-color: var(--color-bg); padding: 0.875rem; border-radius: 0.5rem;">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">Accuracy</div>
+                        <div style="font-size: 1.125rem; font-weight: 700; color: var(--color-text); margin-top: 0.25rem;">±{{ submission.location_accuracy|int if submission.location_accuracy else 'N/A' }} meters</div>
+                    </div>
+                </div>
+                {% else %}
+                <div style="background-color: var(--color-bg); border-radius: 0.5rem; padding: 1rem; color: var(--color-text-secondary); font-size: 0.875rem;">
+                    GPS location was not recorded during camera proof capture.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 9, 10, 11, 12. AI Verification & Admin Findings -->
+            <div class="detail-card">
+                <h3 class="detail-section-title">
+                    <span>🤖</span> Verification Assessment & Feedback
+                </h3>
+
+                <!-- 9. AI Confidence Score -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <span style="font-size: 0.875rem; font-weight: 700; color: var(--color-text);">
+                        AI Verification Confidence Score:
+                    </span>
+                    <span style="font-size: 1.125rem; font-weight: 800; color: {% if submission.confidence_score and submission.confidence_score >= 80 %}#047857{% elif submission.confidence_score and submission.confidence_score >= 40 %}#B45309{% else %}#DC2626{% endif %};">
+                        {{ submission.confidence_score or 'N/A' }}%
+                    </span>
+                </div>
+
+                {% if submission.confidence_score %}
+                <div style="height: 8px; width: 100%; background-color: #E2E8F0; border-radius: 9999px; overflow: hidden; margin-bottom: 1.25rem;">
+                    <div style="height: 100%; width: {{ submission.confidence_score }}%; background-color: {% if submission.confidence_score >= 80 %}#059669{% elif submission.confidence_score >= 40 %}#D97706{% else %}#DC2626{% endif %};"></div>
+                </div>
+                {% endif %}
+
+                <!-- 10. Short Verification Explanation -->
+                <div style="background-color: #F8FAFC; border: 1px solid var(--color-border); border-left: 3px solid {% if submission.verification_status == 'Verified' %}#059669{% elif submission.verification_status == 'Rejected' %}#DC2626{% else %}#D97706{% endif %}; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 0.25rem;">
+                        Verification Explanation
+                    </div>
+                    <p style="margin: 0; font-size: 0.9375rem; color: #1E293B; line-height: 1.55;">
+                        {{ submission.verification_explanation or 'Verification assessment pending.' }}
+                    </p>
+                </div>
+
+                <!-- 11. Administrator Feedback (if reviewed) -->
+                {% if submission.admin_feedback %}
+                <div style="background-color: #FFFBEB; border: 1px solid #FDE68A; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #92400E; text-transform: uppercase; margin-bottom: 0.25rem;">
+                        Administrator Feedback
+                    </div>
+                    <p style="margin: 0; font-size: 0.9375rem; color: #78350F; line-height: 1.55;">
+                        {{ submission.admin_feedback }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- 12. XP Awarded -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background-color: var(--color-bg); border-radius: 0.5rem;">
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">
+                            XP Reward Credited
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.15rem;">
+                            {% if submission.xp_awarded %}
+                            Awarded upon successful verification
+                            {% else %}
+                            XP is awarded only after successful verification
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: {% if submission.xp_awarded %}#047857{% else %}var(--color-text-muted){% endif %};">
+                        +{{ submission.xp_awarded_amount }} XP
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Instructions and Requirements -->
+            <div class="detail-card">
+                <h3 class="detail-section-title">
+                    <span>📋</span> Mission Instructions & Criteria
+                </h3>
+                <div style="margin-bottom: 1rem;">
+                    <strong style="font-size: 0.875rem; color: var(--color-text);">Step-by-Step Instructions:</strong>
+                    <p style="margin: 0.25rem 0 0; font-size: 0.9375rem; color: var(--color-text-secondary); line-height: 1.55;">
+                        {{ submission.instructions }}
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <strong style="font-size: 0.875rem; color: var(--color-text);">Proof Requirements:</strong>
+                    <p style="margin: 0.25rem 0 0; font-size: 0.9375rem; color: var(--color-text-secondary); line-height: 1.55;">
+                        {{ submission.proof_requirements }}
+                    </p>
+                </div>
+
+                {% if submission.safety_guidelines %}
+                <div>
+                    <strong style="font-size: 0.875rem; color: #B45309;">Safety Guidelines:</strong>
+                    <p style="margin: 0.25rem 0 0; font-size: 0.9375rem; color: var(--color-text-secondary); line-height: 1.55;">
+                        {{ submission.safety_guidelines }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar Column -->
+        <div>
+            <!-- Mission & Submission Metadata -->
+            <div class="detail-card">
+                <h3 class="detail-section-title">
+                    <span>ℹ️</span> Record Details
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 0.875rem; font-size: 0.875rem;">
+                    <!-- 3. Date accepted -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">
+                            Date Accepted
+                        </div>
+                        <div style="font-weight: 600; color: var(--color-text); margin-top: 0.15rem;">
+                            {{ submission.date_accepted }}
+                        </div>
+                    </div>
+
+                    <!-- 4. Submission date & time -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">
+                            Submission Date & Time
+                        </div>
+                        <div style="font-weight: 600; color: var(--color-text); margin-top: 0.15rem;">
+                            {{ submission.submission_date }}
+                        </div>
+                    </div>
+
+                    {% if submission.capture_timestamp %}
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">
+                            Camera Capture Timestamp
+                        </div>
+                        <div style="font-weight: 600; color: var(--color-text); margin-top: 0.15rem;">
+                            {{ submission.capture_timestamp }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if submission.reviewed_at %}
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">
+                            Reviewed At
+                        </div>
+                        <div style="font-weight: 600; color: var(--color-text); margin-top: 0.15rem;">
+                            {{ submission.reviewed_at }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if submission.reviewed_by %}
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">
+                            Reviewed By
+                        </div>
+                        <div style="font-weight: 600; color: var(--color-text); margin-top: 0.15rem;">
+                            {{ submission.reviewed_by }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 13. Submission History and Status Changes (Timeline) -->
+            <div class="detail-card">
+                <h3 class="detail-section-title">
+                    <span>⏳</span> Status Timeline
+                </h3>
+
+                <ul class="timeline-list">
+                    {% for event in submission.timeline %}
+                    <li class="timeline-item">
+                        <div class="timeline-icon-bubble">
+                            {{ event.icon }}
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.35rem;">
+                                <strong style="font-size: 0.875rem; color: var(--color-text);">{{ event.title }}</strong>
+                                <span style="font-size: 0.6875rem; font-weight: 700; background-color: #F1F5F9; color: #475569; padding: 0.1rem 0.45rem; border-radius: 9999px;">
+                                    {{ event.badge }}
+                                </span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--color-text-muted); margin: 0.15rem 0 0.25rem;">
+                                {{ event.timestamp }}
+                            </div>
+                            <p style="margin: 0; font-size: 0.8125rem; color: var(--color-text-secondary); line-height: 1.45;">
+                                {{ event.description }}
+                            </p>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

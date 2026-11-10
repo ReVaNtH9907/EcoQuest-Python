@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Environmental Missions — EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/missions.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Missions Hero Banner -->
+<section class="missions-hero">
+    <div class="missions-hero-container">
+        <span class="missions-hero-pill">
+            <span>🎯</span> Real-World Hands-On Challenges
+        </span>
+        <h1>Environmental Action Missions</h1>
+        <p>
+            Choose a verified eco challenge in your community, complete the hands-on steps, and track your environmental footprint.
+        </p>
+
+        {% if user %}
+        <div class="missions-nav-tabs">
+            <a href="{{ url_for('missions.list_missions') }}" class="missions-nav-link active">
+                🌐 Browse Catalog ({{ missions|length }})
+            </a>
+            <a href="{{ url_for('missions.my_missions') }}" class="missions-nav-link">
+                📋 My Accepted Missions ({{ user_missions|length }})
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Filter, Search & Sorting Toolbar -->
+<section class="missions-toolbar-container">
+    <div class="missions-toolbar-card">
+        <form method="GET" action="{{ url_for('missions.list_missions') }}">
+            <!-- Keep active category if filtered -->
+            {% if active_category %}
+            <input type="hidden" name="category" value="{{ active_category }}">
+            {% endif %}
+
+            <div class="toolbar-search-row">
+                <!-- Search Input -->
+                <div>
+                    <input type="text"
+                           name="q"
+                           class="toolbar-search-input"
+                           placeholder="Search missions by keyword, city location, or topic..."
+                           value="{{ search_query or '' }}">
+                </div>
+
+                <!-- Difficulty Filter -->
+                <div>
+                    <select name="difficulty" class="toolbar-select" onchange="this.form.submit()">
+                        <option value="all" {% if not active_difficulty or active_difficulty == 'all' %}selected{% endif %}>All Difficulties</option>
+                        <option value="Beginner" {% if active_difficulty == 'Beginner' %}selected{% endif %}>Beginner</option>
+                        <option value="Intermediate" {% if active_difficulty == 'Intermediate' %}selected{% endif %}>Intermediate</option>
+                        <option value="Advanced" {% if active_difficulty == 'Advanced' %}selected{% endif %}>Advanced</option>
+                    </select>
+                </div>
+
+                <!-- Sorting Options -->
+                <div>
+                    <select name="sort" class="toolbar-select" onchange="this.form.submit()">
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                        <option value="xp_high" {% if sort_by == 'xp_high' %}selected{% endif %}>XP Reward: High to Low</option>
+                        <option value="duration_low" {% if sort_by == 'duration_low' %}selected{% endif %}>Duration: Short to Long</option>
+                        <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.25rem;">
+                        Filter
+                    </button>
+                    {% if active_category or active_difficulty or search_query or sort_by != 'newest' %}
+                    <a href="{{ url_for('missions.list_missions') }}" class="btn btn-outline" style="padding: 0.65rem 1rem;" title="Clear all filters">
+                        ✕ Reset
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Category Pills Bar -->
+            <div class="missions-category-bar" role="tablist">
+                <a href="{{ url_for('missions.list_missions', difficulty=active_difficulty, q=search_query, sort=sort_by) }}"
+                   class="missions-category-pill {% if not active_category or active_category == 'all' %}active{% endif %}">
+                    <span>🌐</span> All Categories
+                </a>
+                {% for cat in categories %}
+                <a href="{{ url_for('missions.list_missions', category=cat.slug, difficulty=active_difficulty, q=search_query, sort=sort_by) }}"
+                   class="missions-category-pill {% if active_category == cat.slug %}active{% endif %}">
+                    <span>{{ cat.icon }}</span> {{ cat.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Missions Catalog Grid -->
+<section class="missions-catalog-container">
+    {% if missions %}
+    <div class="missions-grid">
+        {% for mission in missions %}
+        <article class="mission-card">
+            <div class="mission-card-media">
+                <img src="{{ url_for('static', filename='images/' + mission.image) }}"
+                     alt="{{ mission.title }} illustration"
+                     loading="lazy">
+
+                <div class="mission-card-badges">
+                    <span class="mission-category-badge">
+                        <span>{{ mission.icon }}</span> {{ mission.category }}
+                    </span>
+                    <span class="mission-difficulty-badge {{ mission.difficulty|lower }}">
+                        {{ mission.difficulty }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="mission-card-content">
+                <div>
+                    <h2 class="mission-card-title">
+                        <a href="{{ url_for('missions.view_mission', identifier=mission.slug) }}">
+                            {{ mission.title }}
+                        </a>
+                    </h2>
+
+                    <div class="mission-card-location">
+                        <span>📍</span> {{ mission.location }}
+                    </div>
+
+                    <p class="mission-card-desc">
+                        {{ mission.short_description }}
+                    </p>
+                </div>
+
+                <div>
+                    <div class="mission-card-chips">
+                        <span>⏱️ {{ mission.duration }}</span>
+                        <span>👥 {{ mission.completions_count }} Completed</span>
+                        {% if mission.user_status in ['accepted', 'in_progress'] %}
+                        <span style="color: #D97706; font-weight: 700;">⏳ Ongoing</span>
+                        {% elif mission.user_status == 'completed' %}
+                        <span style="color: #059669; font-weight: 700;">✓ Completed</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mission-card-footer">
+                        <span class="mission-card-xp">
+                            ⭐ +{{ mission.xp_reward }} XP
+                        </span>
+
+                        <a href="{{ url_for('missions.view_mission', identifier=mission.slug) }}" class="btn btn-primary mission-card-btn">
+                            View Details →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem 1.5rem; background-color: var(--color-white); border-radius: 1rem; border: 1px dashed var(--color-border);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 0.5rem;">
+            No missions matched your criteria
+        </h3>
+        <p style="color: var(--color-text-secondary); max-width: 500px; margin: 0 auto 1.5rem;">
+            Try clearing your search term, switching categories, or resetting difficulty filters.
+        </p>
+        <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary">
+            Reset Filters
+        </a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

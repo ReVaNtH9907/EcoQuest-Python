@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}My Environmental Quests — EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/missions.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- My Missions Header & Metrics -->
+<section class="my-missions-header">
+    <div class="my-missions-header-container">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span class="missions-hero-pill">
+                    <span>📋</span> Personal Action Ledger
+                </span>
+                <h1 style="font-size: 2rem; font-weight: 800; color: var(--color-text); margin: 0.5rem 0;">
+                    My Environmental Quests
+                </h1>
+                <p style="color: var(--color-text-secondary); margin: 0; font-size: 1rem;">
+                    Manage your accepted missions, track ongoing environmental fieldwork, and prepare your proof submissions.
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="{{ url_for('missions.list_submissions') }}" class="btn btn-outline">
+                    📸 Proof Ledger
+                </a>
+                <a href="{{ url_for('missions.list_missions') }}" class="btn btn-secondary">
+                    + Explore Missions
+                </a>
+            </div>
+        </div>
+
+        <div class="my-missions-stats-grid">
+            <div class="my-stat-box">
+                <div class="my-stat-label">Total Accepted</div>
+                <div class="my-stat-val">{{ total_accepted }}</div>
+            </div>
+            <div class="my-stat-box">
+                <div class="my-stat-label">Currently Ongoing</div>
+                <div class="my-stat-val" style="color: #D97706;">{{ ongoing_count }}</div>
+            </div>
+            <div class="my-stat-box">
+                <div class="my-stat-label">Completed & Verified</div>
+                <div class="my-stat-val" style="color: var(--color-primary);">{{ completed_count }}</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mission Management Content -->
+<section class="my-missions-content-container">
+    <!-- Status Filter Tabs -->
+    <div class="status-tabs-bar">
+        <a href="{{ url_for('missions.my_missions') }}" class="status-tab {% if active_status == 'all' %}active{% endif %}">
+            All Quests ({{ total_accepted }})
+        </a>
+        <a href="{{ url_for('missions.my_missions', status='ongoing') }}" class="status-tab {% if active_status == 'ongoing' %}active{% endif %}">
+            Ongoing ({{ ongoing_count }})
+        </a>
+        <a href="{{ url_for('missions.my_missions', status='completed') }}" class="status-tab {% if active_status == 'completed' %}active{% endif %}">
+            Completed ({{ completed_count }})
+        </a>
+    </div>
+
+    {% if missions %}
+    <div class="missions-grid">
+        {% for m in missions %}
+        <article class="mission-card">
+            <div class="mission-card-media">
+                <img src="{{ url_for('static', filename='images/' + m.image) }}"
+                     alt="{{ m.title }}">
+
+                <div class="mission-card-badges">
+                    <span class="mission-category-badge">
+                        <span>{{ m.icon }}</span> {{ m.category }}
+                    </span>
+                    <span class="mission-difficulty-badge {{ m.difficulty|lower }}">
+                        {{ m.difficulty }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="mission-card-content">
+                <div>
+                    <h2 class="mission-card-title">
+                        <a href="{{ url_for('missions.view_mission', identifier=m.slug) }}">
+                            {{ m.title }}
+                        </a>
+                    </h2>
+
+                    <div class="mission-card-location">
+                        <span>📍</span> {{ m.location }}
+                    </div>
+
+                    <div style="font-size: 0.8125rem; color: var(--color-text-secondary); margin-bottom: 0.75rem;">
+                        Accepted on <strong>{{ m.accepted_at }}</strong>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="mission-card-chips">
+                        <span>⏱️ {{ m.duration }}</span>
+                        {% if m.status in ['accepted', 'in_progress'] %}
+                        <span style="color: #D97706; font-weight: 700;">⏳ Ongoing Action</span>
+                        {% elif m.status == 'completed' %}
+                        <span style="color: #059669; font-weight: 700;">✓ Completed</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mission-card-footer" style="flex-wrap: wrap; gap: 0.5rem;">
+                        <span class="mission-card-xp">
+                            ⭐ +{{ m.xp_reward }} XP
+                        </span>
+
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            {% if m.status in ['accepted', 'in_progress'] %}
+                            <a href="{{ url_for('missions.submit_proof', identifier=m.slug) }}" class="btn btn-primary mission-card-btn" style="padding: 0.4rem 0.75rem; font-size: 0.8125rem;">
+                                📸 Submit Proof
+                            </a>
+                            <button type="button"
+                                    class="btn btn-outline mission-card-btn btn-withdraw"
+                                    style="padding: 0.4rem 0.65rem; font-size: 0.8125rem; color: #DC2626; border-color: #FECACA; background-color: #FEF2F2; font-weight: 600;"
+                                    onclick="openWithdrawModal('{{ m.slug }}', '{{ m.title|escape }}', '{{ url_for('missions.withdraw_action', identifier=m.slug) }}')"
+                                    title="Withdraw from this mission">
+                                ✕ Withdraw
+                            </button>
+                            {% endif %}
+                            <a href="{{ url_for('missions.view_mission', identifier=m.slug) }}" class="btn btn-secondary mission-card-btn" style="padding: 0.4rem 0.75rem; font-size: 0.8125rem;">
+                                Details →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem 1.5rem; background-color: var(--color-white); border-radius: 1rem; border: 1px dashed var(--color-border);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🌱</div>
+        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 0.5rem;">
+            No missions in this view
+        </h3>
+        <p style="color: var(--color-text-secondary); max-width: 500px; margin: 0 auto 1.5rem;">
+            {% if active_status == 'completed' %}
+            You haven't completed any missions yet. Continue working on your ongoing challenges!
+            {% else %}
+            You have no active missions. Browse our catalog of local environmental actions to get started!
+            {% endif %}
+        </p>
+        <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary">
+            Browse Mission Catalog
+        </a>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Responsive Withdraw Confirmation Dialog Modal -->
+<div id="withdraw-modal" class="withdraw-modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="withdraw-modal-title">
+    <div class="withdraw-modal-box">
+        <div class="withdraw-modal-header">
+            <div class="withdraw-modal-icon">⚠️</div>
+            <div>
+                <h3 id="withdraw-modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--color-text);">
+                    Withdraw from Mission
+                </h3>
+                <p style="margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--color-text-secondary);">
+                    Confirmation required
+                </p>
+            </div>
+        </div>
+
+        <div class="withdraw-modal-body" style="margin: 1.25rem 0; padding: 1rem; background-color: #F8FAFC; border-radius: 0.75rem; border: 1px solid var(--color-border);">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #1E293B;" id="withdraw-mission-name">
+                Mission Title
+            </div>
+            <p style="margin: 0.5rem 0 0; font-size: 0.95rem; color: #334155; line-height: 1.5;">
+                Are you sure you want to withdraw from this mission?
+            </p>
+            <p style="margin: 0.35rem 0 0; font-size: 0.8125rem; color: var(--color-text-muted);">
+                Your participation status will be updated to Withdrawn in Mission History. No XP will be awarded, but you can participate in other environmental missions anytime.
+            </p>
+        </div>
+
+        <div class="withdraw-modal-actions" style="display: flex; justify-content: flex-end; gap: 0.75rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary" onclick="closeWithdrawModal()" style="min-width: 90px; padding: 0.5rem 1rem;">
+                Cancel
+            </button>
+            <form id="withdraw-form" method="POST" action="" style="display: inline; margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger" style="background-color: #DC2626; border-color: #DC2626; color: #FFFFFF; font-weight: 700; min-width: 140px; padding: 0.5rem 1rem;">
+                    Confirm
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.withdraw-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+}
+.withdraw-modal-box {
+    background-color: var(--color-white);
+    border-radius: 1rem;
+    max-width: 480px;
+    width: 100%;
+    padding: 1.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    border: 1px solid var(--color-border);
+    animation: modalFadeIn 0.2s ease-out;
+}
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.withdraw-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+}
+.withdraw-modal-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: #FEF3C7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+</style>
+
+<script>
+function openWithdrawModal(slug, title, actionUrl) {
+    document.getElementById('withdraw-mission-name').textContent = title;
+    document.getElementById('withdraw-form').action = actionUrl;
+    const modal = document.getElementById('withdraw-modal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeWithdrawModal() {
+    const modal = document.getElementById('withdraw-modal');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+// Close on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeWithdrawModal();
+    }
+});
+
+// Close when clicking on backdrop
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('withdraw-modal');
+    if (e.target === modal) {
+        closeWithdrawModal();
+    }
+});
+</script>
+</section>
+{% endblock %}

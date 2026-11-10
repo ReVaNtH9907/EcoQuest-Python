@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="100%" height="100%">
+  <defs>
+    <linearGradient id="recBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EFF6FF"/>
+      <stop offset="100%" stop-color="#ECFDF5"/>
+    </linearGradient>
+    <linearGradient id="crateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="600" height="340" fill="url(#recBg)"/>
+  
+  <!-- Subtle Grid Pattern -->
+  <g stroke="#3B82F6" stroke-width="0.75" stroke-opacity="0.12">
+    <line x1="0" y1="85" x2="600" y2="85" />
+    <line x1="0" y1="170" x2="600" y2="170" />
+    <line x1="0" y1="255" x2="600" y2="255" />
+    <line x1="150" y1="0" x2="150" y2="340" />
+    <line x1="300" y1="0" x2="300" y2="340" />
+    <line x1="450" y1="0" x2="450" y2="340" />
+  </g>
+
+  <!-- Ground Plane -->
+  <rect y="270" width="600" height="70" fill="#E2E8F0" opacity="0.6"/>
+  <line x1="0" y1="270" x2="600" y2="270" stroke="#CBD5E1" stroke-width="2"/>
+
+  <!-- Sorting Crates / Bins -->
+  <!-- Glass/Metal Crate -->
+  <g transform="translate(130, 160)">
+    <rect x="0" y="30" width="90" height="80" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="3"/>
+    <path d="M 15 50 L 75 50" stroke="#E2E8F0" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 15 70 L 75 70" stroke="#E2E8F0" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 15 90 L 75 90" stroke="#E2E8F0" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="45" cy="70" r="16" fill="#ECFDF5"/>
+    <text x="45" y="75" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#059669" text-anchor="middle">PET</text>
+  </g>
+
+  <!-- Center Big Sorting Hub -->
+  <g transform="translate(250, 130)">
+    <!-- Shadow -->
+    <ellipse cx="55" cy="140" rx="65" ry="12" fill="#047857" opacity="0.15"/>
+    <!-- Main Box -->
+    <rect x="10" y="25" width="90" height="110" rx="10" fill="#FFFFFF" stroke="#059669" stroke-width="3.5"/>
+    <!-- Recyclables inside sticking out -->
+    <!-- Bottles -->
+    <rect x="25" y="-5" width="16" height="35" rx="4" fill="#6EE7B7" stroke="#059669" stroke-width="2"/>
+    <rect x="29" y="-15" width="8" height="10" rx="2" fill="#047857"/>
+    <!-- Paper rolls / Box -->
+    <rect x="52" y="-12" width="28" height="42" rx="3" fill="#FDE68A" stroke="#D97706" stroke-width="2"/>
+    
+    <!-- Big Recycling Icon -->
+    <g transform="translate(55, 75)">
+      <circle cx="0" cy="0" r="24" fill="#ECFDF5"/>
+      <path d="M0 -15 L7 -3 L-7 -3 Z" fill="#059669"/>
+      <path d="M14 6 L7 18 L0 6 Z" fill="#059669"/>
+      <path d="M-14 6 L-7 18 L0 6 Z" fill="#059669"/>
+    </g>
+    <!-- Label -->
+    <rect x="20" y="110" width="70" height="14" rx="4" fill="#059669"/>
+    <text x="55" y="121" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="middle">SORTED</text>
+  </g>
+
+  <!-- Third Box (Paper) -->
+  <g transform="translate(380, 160)">
+    <rect x="0" y="30" width="90" height="80" rx="8" fill="#FFFFFF" stroke="#3B82F6" stroke-width="3"/>
+    <circle cx="45" cy="70" r="16" fill="#EFF6FF"/>
+    <text x="45" y="75" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#2563EB" text-anchor="middle">PAPER</text>
+  </g>
+
+  <!-- Tag Pill -->
+  <g transform="translate(390, 40)">
+    <rect x="0" y="0" width="160" height="36" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.06))"/>
+    <circle cx="18" cy="18" r="9" fill="#ECFDF5"/>
+    <path d="M14 18 L17 21 L22 15" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="35" y="23" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#111827">AI Weight Check</text>
+  </g>
+</svg>

@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard · EcoQuest Community Rankings{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/leaderboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--space-8); padding-bottom: var(--space-16);">
+
+    <!-- Header -->
+    <header class="leaderboard-header">
+        <span class="badge badge-primary mb-2">🏆 Verified Community Impact</span>
+        <h1>Community Leaderboard</h1>
+        <p>
+            Recognizing ecological heroes turning knowledge into measurable real-world change.
+            All XP is verified through rigorous photo audits and educational milestones.
+        </p>
+    </header>
+
+    <!-- Filters & Category Navigation -->
+    <section class="leaderboard-controls" aria-label="Leaderboard Filters">
+        
+        {# Category Scope Tabs: Global | City | College #}
+        <div class="filter-group" role="tablist" aria-label="Leaderboard Scope">
+            <a href="{{ url_for('leaderboard.rankings', category='global', timeframe=active_timeframe) }}"
+               class="filter-tab {% if active_category == 'global' %}active{% endif %}"
+               role="tab" aria-selected="{{ 'true' if active_category == 'global' else 'false' }}">
+                🌍 Global
+            </a>
+            <a href="{{ url_for('leaderboard.rankings', category='city', city=active_city, timeframe=active_timeframe) }}"
+               class="filter-tab {% if active_category == 'city' %}active{% endif %}"
+               role="tab" aria-selected="{{ 'true' if active_category == 'city' else 'false' }}">
+                📍 City
+            </a>
+            <a href="{{ url_for('leaderboard.rankings', category='college', college=active_college, timeframe=active_timeframe) }}"
+               class="filter-tab {% if active_category == 'college' %}active{% endif %}"
+               role="tab" aria-selected="{{ 'true' if active_category == 'college' else 'false' }}">
+                🎓 College
+            </a>
+        </div>
+
+        {# Timeframe Filters: All Time | Monthly | Weekly #}
+        <div class="filter-group" role="tablist" aria-label="Leaderboard Timeframe">
+            <a href="{{ url_for('leaderboard.rankings', category=active_category, city=active_city, college=active_college, timeframe='all_time') }}"
+               class="filter-tab {% if active_timeframe == 'all_time' %}active{% endif %}"
+               role="tab" aria-selected="{{ 'true' if active_timeframe == 'all_time' else 'false' }}">
+                All Time
+            </a>
+            <a href="{{ url_for('leaderboard.rankings', category=active_category, city=active_city, college=active_college, timeframe='monthly') }}"
+               class="filter-tab {% if active_timeframe == 'monthly' %}active{% endif %}"
+               role="tab" aria-selected="{{ 'true' if active_timeframe == 'monthly' else 'false' }}">
+                This Month
+            </a>
+            <a href="{{ url_for('leaderboard.rankings', category=active_category, city=active_city, college=active_college, timeframe='weekly') }}"
+               class="filter-tab {% if active_timeframe == 'weekly' %}active{% endif %}"
+               role="tab" aria-selected="{{ 'true' if active_timeframe == 'weekly' else 'false' }}">
+                This Week
+            </a>
+        </div>
+
+    </section>
+
+    {# Sub-selector for City or College #}
+    {% if active_category == 'city' and available_cities %}
+    <div class="location-subfilter">
+        <label for="city-filter" style="font-weight: 600; font-size: var(--text-sm); color: var(--color-text);">
+            Select City:
+        </label>
+        <select id="city-filter" class="location-select" onchange="window.location.href=this.value;">
+            {% for c in available_cities %}
+            <option value="{{ url_for('leaderboard.rankings', category='city', city=c, timeframe=active_timeframe) }}"
+                    {% if active_city|lower == c|lower %}selected{% endif %}>
+                📍 {{ c }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    {% elif active_category == 'college' and available_colleges %}
+    <div class="location-subfilter">
+        <label for="college-filter" style="font-weight: 600; font-size: var(--text-sm); color: var(--color-text);">
+            Select Campus / College:
+        </label>
+        <select id="college-filter" class="location-select" onchange="window.location.href=this.value;">
+            {% for col in available_colleges %}
+            <option value="{{ url_for('leaderboard.rankings', category='college', college=col, timeframe=active_timeframe) }}"
+                    {% if active_college|lower == col|lower %}selected{% endif %}>
+                🎓 {{ col }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+
+    <!-- Top 3 Podium (when at least 3 participants exist) -->
+    {% if data.podium and data.podium|length >= 3 %}
+    <section class="podium-container" aria-label="Top 3 Champions">
+        
+        {# 2nd Place #}
+        {% set p2 = data.podium[1] %}
+        <div class="podium-card podium-2">
+            <div class="podium-badge">🥈</div>
+            <img src="{{ p2.avatar_url }}" alt="{{ p2.full_name }}" class="podium-avatar">
+            <div class="podium-name" title="{{ p2.full_name }}">{{ p2.full_name }}</div>
+            <div class="podium-meta">{{ p2.level_icon }} {{ p2.level_title }} · {{ p2.city }}</div>
+            <div class="podium-xp">+{{ p2.score_xp }} XP</div>
+            <div class="caption">{{ p2.verified_missions }} verified missions</div>
+        </div>
+
+        {# 1st Place #}
+        {% set p1 = data.podium[0] %}
+        <div class="podium-card podium-1">
+            <div class="podium-badge">👑</div>
+            <img src="{{ p1.avatar_url }}" alt="{{ p1.full_name }}" class="podium-avatar">
+            <div class="podium-name" title="{{ p1.full_name }}">{{ p1.full_name }}</div>
+            <div class="podium-meta">{{ p1.level_icon }} {{ p1.level_title }} · {{ p1.city }}</div>
+            <div class="podium-xp" style="font-size: 1.35rem;">+{{ p1.score_xp }} XP</div>
+            <div class="caption">{{ p1.verified_missions }} verified missions</div>
+        </div>
+
+        {# 3rd Place #}
+        {% set p3 = data.podium[2] %}
+        <div class="podium-card podium-3">
+            <div class="podium-badge">🥉</div>
+            <img src="{{ p3.avatar_url }}" alt="{{ p3.full_name }}" class="podium-avatar">
+            <div class="podium-name" title="{{ p3.full_name }}">{{ p3.full_name }}</div>
+            <div class="podium-meta">{{ p3.level_icon }} {{ p3.level_title }} · {{ p3.city }}</div>
+            <div class="podium-xp">+{{ p3.score_xp }} XP</div>
+            <div class="caption">{{ p3.verified_missions }} verified missions</div>
+        </div>
+
+    </section>
+    {% endif %}
+
+    <!-- Main Leaderboard Table -->
+    <section class="leaderboard-table-card" aria-label="Rankings Table">
+        {% if data.rankings %}
+        <div class="table-responsive">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Rank</th>
+                        <th>Eco Member</th>
+                        <th>Level Tier</th>
+                        <th>Location & College</th>
+                        <th style="text-align: center;">Verified Missions</th>
+                        <th style="text-align: right;">{{ 'Period XP' if active_timeframe != 'all_time' else 'Total XP' }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data.rankings %}
+                    <tr class="{% if row.is_current_user %}row-current-user{% endif %}">
+                        {# Rank #}
+                        <td class="rank-cell">
+                            {% if row.rank == 1 %}
+                                <span class="rank-pill-1">🥇 #1</span>
+                            {% elif row.rank == 2 %}
+                                <span class="rank-pill-2">🥈 #2</span>
+                            {% elif row.rank == 3 %}
+                                <span class="rank-pill-3">🥉 #3</span>
+                            {% else %}
+                                <span style="color: var(--color-text-secondary);">#{{ row.rank }}</span>
+                            {% endif %}
+                        </td>
+
+                        {# Member Identity #}
+                        <td>
+                            <div class="user-cell">
+                                <img src="{{ row.avatar_url }}" alt="{{ row.full_name }}" class="user-table-avatar">
+                                <div>
+                                    <div class="user-table-name">
+                                        {{ row.full_name }}
+                                        {% if row.is_current_user %}
+                                            <span class="badge badge-primary" style="font-size: 0.65rem; padding: 0.1rem 0.4rem; margin-left: 0.35rem;">You</span>
+                                        {% endif %}
+                                        {% if row.is_demo %}
+                                            <span class="badge badge-warning" style="font-size: 0.65rem; padding: 0.1rem 0.4rem; margin-left: 0.35rem;">Demo</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="user-table-sub">Member since {{ row.created_at.strftime('%b %Y') if row.created_at else '' }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        {# Level Tier #}
+                        <td>
+                            <span class="badge badge-neutral" style="font-size: 0.75rem;">
+                                {{ row.level_icon }} Lvl {{ row.level_number }} — {{ row.level_title }}
+                            </span>
+                        </td>
+
+                        {# Location & Institution #}
+                        <td>
+                            <div style="font-size: 0.85rem; font-weight: 500;">📍 {{ row.city }}</div>
+                            <div class="caption">🎓 {{ row.college }}</div>
+                        </td>
+
+                        {# Missions Completed #}
+                        <td style="text-align: center;">
+                            <span style="font-weight: 700; color: var(--color-text);">{{ row.verified_missions }}</span>
+                            <span class="caption" style="display: block; font-size: 0.7rem;">verified</span>
+                        </td>
+
+                        {# XP Amount #}
+                        <td style="text-align: right;">
+                            <span class="text-green" style="font-weight: 800; font-size: var(--text-base);">
+                                +{{ row.score_xp }} XP
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        {# Empty State #}
+        <div style="text-align: center; padding: var(--space-12) var(--space-4);">
+            <div style="font-size: 3rem; margin-bottom: var(--space-3);">🌱</div>
+            <h3>No participants recorded yet in this category</h3>
+            <p class="text-secondary text-sm" style="max-width: 480px; margin: 0 auto var(--space-6);">
+                Be the first to complete an environmental mission or learning quiz in this community!
+            </p>
+            <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary">
+                Explore Available Missions
+            </a>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Sticky Bottom Bar for Logged-In User Position -->
+    {% if current_user and data.user_position %}
+    <div class="user-standing-bar">
+        <div class="user-standing-info">
+            <span class="standing-rank-badge">#{{ data.user_position.rank }}</span>
+            <div>
+                <div style="font-weight: 700; font-size: var(--text-base);">
+                    Your Standing in {{ active_category|title }} Leaderboard
+                </div>
+                <div style="font-size: var(--text-xs); opacity: 0.9;">
+                    {{ data.user_position.score_xp }} XP earned · {{ data.user_position.verified_missions }} verified missions completed
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <a href="{{ url_for('missions.list_missions') }}" class="btn btn-sm" style="background: var(--color-white); color: var(--color-primary-dark); font-weight: 700;">
+                ⚡ Earn More XP
+            </a>
+        </div>
+    </div>
+    {% elif not current_user %}
+    <div class="card mt-8" style="padding: var(--space-6); text-align: center; background: #F0FDF4; border: 1.5px solid var(--color-primary-light);">
+        <h3>Want to join the EcoQuest Leaderboard?</h3>
+        <p class="text-sm text-secondary mb-4">
+            Sign up to track your real-world environmental impact, complete quests, earn badges, and compete with your campus!
+        </p>
+        <div style="display: flex; justify-content: center; gap: 1rem;">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Create Free Account</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Log In</a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

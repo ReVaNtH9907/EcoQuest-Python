@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import progress_bar, xp_display, badge %}
+
+{% block title %}Dashboard · EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--space-6); padding-bottom: var(--space-16);">
+
+    <!-- =========================================================
+         1. DASHBOARD HEADER
+         ========================================================= -->
+    <header class="dash-header-card" aria-label="Member Dashboard Header">
+        <div class="dash-header-grid">
+            
+            {# User Identity & Welcome #}
+            <div class="dash-user-identity">
+                <div class="dash-avatar-wrapper">
+                    <img src="{{ user.avatar_url }}" alt="{{ user.full_name }}" class="dash-avatar-img" />
+                    <span class="dash-avatar-badge" title="Active Member">✓</span>
+                </div>
+                <div class="dash-greeting-box">
+                    <h1>Welcome back, {{ user.full_name }}! 👋</h1>
+                    <p class="dash-motivation">{{ data.motivational_message }}</p>
+                    <div class="dash-meta-pills">
+                        <span class="dash-date-pill">📅 {{ data.current_date }}</span>
+                        <span class="badge badge-primary">{{ user.college }}</span>
+                        <span class="badge badge-neutral">📍 {{ user.city }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Quick Navigation Actions #}
+            <div class="dash-header-actions">
+                <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary">
+                    🎯 Explore Missions
+                </a>
+                <a href="{{ url_for('missions.mission_history') }}" class="btn btn-secondary">
+                    📜 Mission History
+                </a>
+                <a href="{{ url_for('profile.view_profile') }}" class="btn btn-secondary">
+                    👤 My Profile
+                </a>
+            </div>
+
+        </div>
+
+        {# Email Verification Reminder Alert #}
+        {% if not user.email_verified %}
+        <div class="dash-verify-alert" role="alert">
+            <span class="dash-verify-alert-text">
+                ⚠️ Your email address (<strong>{{ user.email }}</strong>) is not verified. Complete verification to activate community badges.
+            </span>
+            <a href="{{ url_for('auth.verify_otp') }}" class="btn btn-sm btn-primary" style="background-color: #D97706; border-color: #D97706;">
+                Verify Email Now →
+            </a>
+        </div>
+        {% endif %}
+    </header>
+
+
+    <!-- =========================================================
+         2. PROGRESS OVERVIEW (5 STATISTIC CARDS)
+         ========================================================= -->
+    <section aria-label="Progress Overview" class="mb-6">
+        <div class="dash-stats-grid">
+            
+            {# Stat 1: Total XP #}
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-card-title">Total XP</span>
+                    <span class="stat-card-icon">⚡</span>
+                </div>
+                <div>
+                    <div class="stat-card-number text-green">{{ data.progress_stats.total_xp }}</div>
+                    <div class="stat-card-sub">
+                        {% if data.progress_stats.xp_to_next_level > 0 %}
+                            {{ data.progress_stats.xp_to_next_level }} XP to next level
+                        {% else %}
+                            Max Tier Reached 👑
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# Stat 2: Current Level #}
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-card-title">Current Level</span>
+                    <span class="stat-card-icon">🎖️</span>
+                </div>
+                <div>
+                    <div class="stat-card-number">Lvl {{ data.progress_stats.level_number }}</div>
+                    <div class="stat-card-sub">{{ data.progress_stats.level_icon }} {{ data.progress_stats.current_level }}</div>
+                </div>
+            </div>
+
+            {# Stat 3: Missions Completed #}
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-card-title">Missions</span>
+                    <span class="stat-card-icon">🎯</span>
+                </div>
+                <div>
+                    <div class="stat-card-number">{{ data.progress_stats.missions_completed }}</div>
+                    <div class="stat-card-sub">Completed & verified</div>
+                </div>
+            </div>
+
+            {# Stat 4: Lessons Completed #}
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-card-title">Lessons</span>
+                    <span class="stat-card-icon">📖</span>
+                </div>
+                <div>
+                    <div class="stat-card-number">{{ data.progress_stats.lessons_completed }}</div>
+                    <div class="stat-card-sub">Of {{ data.learning_progress.total_lessons }} core modules</div>
+                </div>
+            </div>
+
+            {# Stat 5: Current Streak #}
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-card-title">Streak</span>
+                    <span class="stat-card-icon">🔥</span>
+                </div>
+                <div>
+                    <div class="stat-card-number">{{ data.progress_stats.current_streak }} {% if data.progress_stats.current_streak == 1 %}day{% else %}days{% endif %}</div>
+                    <div class="stat-card-sub">
+                        {% if data.progress_stats.is_active_today %}
+                            Active today! ⚡
+                        {% elif data.progress_stats.longest_streak > 0 %}
+                            Best: {{ data.progress_stats.longest_streak }} days
+                        {% else %}
+                            Take action to start
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- =========================================================
+         3.5 ACHIEVEMENT BADGES
+         ========================================================= -->
+    <section class="card mb-8" style="padding: var(--space-6);" aria-label="Achievement Badges">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <h2 class="dash-section-title" style="margin: 0; font-size: var(--text-xl);">🏅 Environmental Badges</h2>
+                <p class="text-xs text-secondary" style="margin: 0;">
+                    Recognizing real-world ecological milestones and sustainability achievements.
+                </p>
+            </div>
+            <span class="badge badge-primary">{{ data.badges.total_earned }} / {{ data.badges.total_available }} Unlocked</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+            {# Earned Badges #}
+            {% for b in data.badges.earned_badges %}
+            <div style="display: flex; align-items: flex-start; gap: 0.85rem; padding: 0.85rem 1rem; border-radius: var(--radius-lg); background-color: #F0FDF4; border: 1.5px solid #86EFAC;">
+                <div style="font-size: 2.25rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.2));">{{ b.icon }}</div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                        <strong style="color: #166534; font-size: 0.95rem;">{{ b.name }}</strong>
+                        <span class="badge badge-success" style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">Unlocked</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: #15803D; margin: 0.2rem 0;">{{ b.description }}</p>
+                    <span class="caption" style="color: #166534; font-size: 0.72rem;">Earned on {{ b.awarded_at }}</span>
+                </div>
+            </div>
+            {% endfor %}
+
+            {# Locked Badges #}
+            {% for b in data.badges.locked_badges %}
+            <div style="display: flex; align-items: flex-start; gap: 0.85rem; padding: 0.85rem 1rem; border-radius: var(--radius-lg); background-color: #F8FAFC; border: 1px dashed #CBD5E1; opacity: 0.75;">
+                <div style="font-size: 2.25rem; line-height: 1; filter: grayscale(100%); opacity: 0.5;">{{ b.icon }}</div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                        <strong style="color: #64748B; font-size: 0.95rem;">{{ b.name }}</strong>
+                        <span class="badge badge-neutral" style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">🔒 Locked</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: #64748B; margin: 0.2rem 0;">{{ b.description }}</p>
+                    <span class="caption" style="color: #94A3B8; font-size: 0.72rem;">Goal: {{ b.requirement_description }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {# Level Progression Bar Card #}
+    <div class="card mb-8" style="padding: var(--space-5) var(--space-6); background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%); border: 1.5px solid var(--color-primary-light);">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: var(--space-3);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 2rem;">{{ data.progress_stats.level_icon }}</span>
+                <div>
+                    <div style="font-size: var(--text-base); font-weight: 700; color: var(--color-primary-dark);">
+                        Level {{ data.progress_stats.level_number }} — {{ data.progress_stats.current_level }}
+                    </div>
+                    <div class="caption">
+                        {% if data.progress_stats.xp_to_next_level > 0 %}
+                            {{ data.progress_stats.total_xp }} / {{ data.progress_stats.next_level_xp }} XP · <strong>{{ data.progress_stats.xp_to_next_level }} XP</strong> needed for next tier
+                        {% else %}
+                            🌟 Maximum Guardian Level Reached · {{ data.progress_stats.total_xp }} Total XP
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div>
+                <span class="badge badge-primary" style="font-size: 0.85rem; padding: 0.3rem 0.75rem;">
+                    {{ data.progress_stats.level_progress_pct }}% Tier Progress
+                </span>
+            </div>
+        </div>
+        <div style="background-color: #E2E8F0; border-radius: 9999px; height: 10px; overflow: hidden; width: 100%;">
+            <div style="background: linear-gradient(90deg, #10B981 0%, #059669 100%); height: 100%; border-radius: 9999px; width: {{ data.progress_stats.level_progress_pct }}%; transition: width 0.4s ease;"></div>
+        </div>
+    </div>
+
+
+    <!-- =========================================================
+         3. ENVIRONMENTAL IMPACT (HONEST ZERO STATES)
+         ========================================================= -->
+    <section class="impact-preview-container" aria-label="Personal Environmental Impact">
+        <div class="impact-header-row">
+            <div>
+                <h2 class="dash-section-title">Your Verified Environmental Impact</h2>
+                <p class="text-sm text-secondary" style="margin: 0;">
+                    Measurable ecological results verified through completed hands-on missions.
+                </p>
+            </div>
+            <span class="badge badge-neutral">Personal Impact Record</span>
+        </div>
+
+        <div class="impact-grid-4">
+            
+            {# Impact 1: Waste Collected #}
+            <div class="impact-box">
+                <div class="impact-box-icon">♻️</div>
+                <div class="impact-box-val">{{ "%.1f"|format(data.environmental_impact.waste_collected_kg) }} kg</div>
+                <div class="impact-box-label">Waste Collected</div>
+                <div class="impact-box-caption">Diverted from local landfills</div>
+            </div>
+
+            {# Impact 2: Trees Planted #}
+            <div class="impact-box">
+                <div class="impact-box-icon">🌱</div>
+                <div class="impact-box-val">{{ data.environmental_impact.trees_planted }}</div>
+                <div class="impact-box-label">Trees Planted</div>
+                <div class="impact-box-caption">Indigenous species logged</div>
+            </div>
+
+            {# Impact 3: Areas Cleaned #}
+            <div class="impact-box">
+                <div class="impact-box-icon">🧹</div>
+                <div class="impact-box-val">{{ data.environmental_impact.areas_cleaned }}</div>
+                <div class="impact-box-label">Areas Cleaned</div>
+                <div class="impact-box-caption">Parks, beaches & public trails</div>
+            </div>
+
+            {# Impact 4: Volunteer Hours #}
+            <div class="impact-box">
+                <div class="impact-box-icon">⏱️</div>
+                <div class="impact-box-val">{{ "%.1f"|format(data.environmental_impact.volunteer_hours) }} hrs</div>
+                <div class="impact-box-label">Volunteer Hours</div>
+                <div class="impact-box-caption">Dedicated community service</div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- =========================================================
+         3.5 ACHIEVEMENT BADGES
+         ========================================================= -->
+    <section class="card mb-8" style="padding: var(--space-6);" aria-label="Achievement Badges">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <h2 class="dash-section-title" style="margin: 0; font-size: var(--text-xl);">🏅 Environmental Badges</h2>
+                <p class="text-xs text-secondary" style="margin: 0;">
+                    Recognizing real-world ecological milestones and sustainability achievements.
+                </p>
+            </div>
+            <span class="badge badge-primary">{{ data.badges.total_earned }} / {{ data.badges.total_available }} Unlocked</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+            {# Earned Badges #}
+            {% for b in data.badges.earned_badges %}
+            <div style="display: flex; align-items: flex-start; gap: 0.85rem; padding: 0.85rem 1rem; border-radius: var(--radius-lg); background-color: #F0FDF4; border: 1.5px solid #86EFAC;">
+                <div style="font-size: 2.25rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.2));">{{ b.icon }}</div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                        <strong style="color: #166534; font-size: 0.95rem;">{{ b.name }}</strong>
+                        <span class="badge badge-success" style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">Unlocked</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: #15803D; margin: 0.2rem 0;">{{ b.description }}</p>
+                    <span class="caption" style="color: #166534; font-size: 0.72rem;">Earned on {{ b.awarded_at }}</span>
+                </div>
+            </div>
+            {% endfor %}
+
+            {# Locked Badges #}
+            {% for b in data.badges.locked_badges %}
+            <div style="display: flex; align-items: flex-start; gap: 0.85rem; padding: 0.85rem 1rem; border-radius: var(--radius-lg); background-color: #F8FAFC; border: 1px dashed #CBD5E1; opacity: 0.75;">
+                <div style="font-size: 2.25rem; line-height: 1; filter: grayscale(100%); opacity: 0.5;">{{ b.icon }}</div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                        <strong style="color: #64748B; font-size: 0.95rem;">{{ b.name }}</strong>
+                        <span class="badge badge-neutral" style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">🔒 Locked</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: #64748B; margin: 0.2rem 0;">{{ b.description }}</p>
+                    <span class="caption" style="color: #94A3B8; font-size: 0.72rem;">Goal: {{ b.requirement_description }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+
+    <!-- =========================================================
+         4. TWO-COLUMN LAYOUT: MISSIONS & LEARNING / RECENT ACTIVITY
+         ========================================================= -->
+    <div class="dash-content-columns">
+        
+        {# Left Column: Recommended Missions #}
+        <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h2 class="dash-section-title">Recommended Missions</h2>
+                    <p class="text-xs text-secondary" style="margin: 0;">
+                        Curated environmental challenges to take real-world action and earn XP.
+                    </p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    {% if data.user_missions_summary and data.user_missions_summary.ongoing_count > 0 %}
+                    <a href="{{ url_for('missions.my_missions', status='ongoing') }}" class="badge badge-warning" style="text-decoration: none;">
+                        ⏳ {{ data.user_missions_summary.ongoing_count }} Ongoing
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('missions.list_missions') }}" class="text-xs text-primary" style="font-weight: 600;">
+                        View All →
+                    </a>
+                </div>
+            </div>
+
+            <div class="mission-list">
+                {% for mission in data.recommended_missions %}
+                <div class="rec-mission-card">
+                    <div class="rec-mission-top">
+                        <div style="font-size: 1.75rem; flex-shrink: 0;">{{ mission.icon }}</div>
+                        <div class="rec-mission-info" style="flex: 1;">
+                            <div class="rec-mission-tags mb-1">
+                                <span class="badge badge-{{ mission.badge_variant }}">{{ mission.category }}</span>
+                                <span class="badge badge-neutral">{{ mission.difficulty }}</span>
+                            </div>
+                            <h3>{{ mission.name }}</h3>
+                            <p class="rec-mission-desc">{{ mission.description }}</p>
+                        </div>
+                    </div>
+                    <div class="rec-mission-footer">
+                        <div style="display: flex; align-items: center; gap: var(--space-3);">
+                            {{ xp_display(mission.xp_reward) }}
+                            <span class="caption">⏱️ {{ mission.time_estimate }}</span>
+                        </div>
+                        <a href="{{ url_for('missions.view_mission', identifier=mission.slug) if mission.slug else url_for('missions.list_missions') }}" class="btn btn-primary btn-sm">
+                            View Mission
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# Right Column: Learning Progress & Recent Activity #}
+        <aside class="dash-sidebar" aria-label="Learning and Activity Status">
+            
+            {# Learning Progress Card #}
+            <div class="learning-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
+                    <h2 class="dash-section-title" style="font-size: var(--text-lg);">Learning Progress</h2>
+                    <span class="badge badge-primary">{{ data.learning_progress.progress_pct }}% Completed</span>
+                </div>
+
+                <div class="learning-progress-block">
+                    {{ progress_bar(data.learning_progress.progress_pct, label="Modules Progress") }}
+                </div>
+
+                <div class="learning-lesson-title">
+                    {{ data.learning_progress.next_lesson_title }}
+                </div>
+                <div class="learning-lesson-meta">
+                    {{ data.learning_progress.lessons_completed }} of {{ data.learning_progress.total_lessons }} lessons completed
+                </div>
+
+                <a href="{{ url_for('learning.modules') }}" class="btn btn-secondary btn-block">
+                    📖 Continue Learning
+                </a>
+            </div>
+
+            {# Recent Activity (Friendly Empty State) #}
+            <div class="activity-card">
+                <h2 class="dash-section-title" style="font-size: var(--text-lg); margin-bottom: var(--space-4);">
+                    Recent Activity
+                </h2>
+
+                {% if data.recent_activities %}
+                    <ul class="activity-list">
+                        {% for act in data.recent_activities %}
+                        <li class="activity-item">
+                            <span class="activity-icon">{{ act.icon }}</span>
+                            <div style="flex-grow: 1;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                                    <p class="activity-text" style="margin: 0; font-weight: 600;">{{ act.title or act.text }}</p>
+                                    {% if act.badge %}
+                                    <span class="badge badge-{{ act.badge_variant or 'success' }}">{{ act.badge }}</span>
+                                    {% endif %}
+                                </div>
+                                <span class="activity-time">{{ act.timestamp or act.time }}</span>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    {# Honest Friendly Empty State #}
+                    <div class="activity-empty-state">
+                        <span class="activity-empty-icon">🌱</span>
+                        <div class="activity-empty-title">No activity recorded yet</div>
+                        <p class="activity-empty-desc">
+                            Complete your first eco mission or start a learning module to begin building your environmental activity log.
+                        </p>
+                        <a href="{{ url_for('missions.list_missions') }}" class="btn btn-primary btn-sm">
+                            Start First Mission
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            {# Community Leaderboard Link Card #}
+            <div class="card" style="padding: var(--space-5);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
+                    <div>
+                        <div style="font-size: var(--text-sm); font-weight: 700; color: var(--color-text);">
+                            🏆 Leaderboard Position
+                        </div>
+                        <div class="caption">Real-time verified standings</div>
+                    </div>
+                    <a href="{{ url_for('leaderboard.rankings') }}" class="btn btn-outline btn-sm">
+                        View Rankings →
+                    </a>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;">
+                    <div style="background: #F8FAFC; padding: 0.6rem 0.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                        <div style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary);">#{{ data.progress_stats.global_rank }}</div>
+                        <div class="caption" style="font-size: 0.7rem; font-weight: 600;">Global</div>
+                    </div>
+                    <div style="background: #F8FAFC; padding: 0.6rem 0.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                        <div style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary);">#{{ data.progress_stats.city_rank }}</div>
+                        <div class="caption" style="font-size: 0.7rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ user.city }}">{{ user.city }}</div>
+                    </div>
+                    <div style="background: #F8FAFC; padding: 0.6rem 0.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                        <div style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary);">#{{ data.progress_stats.college_rank }}</div>
+                        <div class="caption" style="font-size: 0.7rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ user.college }}">College</div>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+</div>
+{% endblock %}

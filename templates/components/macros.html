@@ -1,0 +1,160 @@
+{# ============================================================
+   EcoQuest — Reusable Jinja2 Component Macros
+   ============================================================
+   Import in any template with:
+     {% from "components/macros.html" import card, badge, ... %}
+   ============================================================ #}
+
+
+{# --- Button ------------------------------------------------------- #}
+{% macro button(text, variant="primary", size="", href="", type="button", classes="", icon="") %}
+{% if href %}
+<a href="{{ href }}" class="btn btn-{{ variant }}{% if size %} btn-{{ size }}{% endif %} {{ classes }}">
+    {% if icon %}<span>{{ icon }}</span>{% endif %}{{ text }}
+</a>
+{% else %}
+<button type="{{ type }}" class="btn btn-{{ variant }}{% if size %} btn-{{ size }}{% endif %} {{ classes }}">
+    {% if icon %}<span>{{ icon }}</span>{% endif %}{{ text }}
+</button>
+{% endif %}
+{% endmacro %}
+
+
+{# --- Card --------------------------------------------------------- #}
+{% macro card(title="", description="", footer_content="", classes="", interactive=false) %}
+<div class="card{% if interactive %} card-interactive{% endif %} {{ classes }}">
+    {% if title %}
+    <div class="card-header">
+        <h3 class="card-title">{{ title }}</h3>
+    </div>
+    {% endif %}
+    {% if description %}
+    <p class="card-description">{{ description }}</p>
+    {% endif %}
+    <div class="card-body">
+        {{ caller() }}
+    </div>
+    {% if footer_content %}
+    <div class="card-footer">
+        {{ footer_content }}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+
+{# --- Badge -------------------------------------------------------- #}
+{% macro badge(text, variant="primary", dot=false) %}
+<span class="badge badge-{{ variant }}">
+    {% if dot %}<span class="badge-dot"></span>{% endif %}{{ text }}
+</span>
+{% endmacro %}
+
+
+{# --- XP Display --------------------------------------------------- #}
+{% macro xp_display(amount) %}
+<span class="xp-display">
+    <span class="xp-icon">⚡</span>
+    <span>{{ amount }} XP</span>
+</span>
+{% endmacro %}
+
+
+{# --- XP Card ------------------------------------------------------ #}
+{% macro xp_card(amount, label="Total XP") %}
+<div class="xp-card">
+    <div>
+        <div class="xp-amount">{{ amount }}</div>
+        <div class="xp-label">{{ label }}</div>
+    </div>
+</div>
+{% endmacro %}
+
+
+{# --- Progress Bar ------------------------------------------------- #}
+{% macro progress_bar(value, max=100, label="", variant="", size="") %}
+{% set pct = ((value / max) * 100) | round | int if max > 0 else 0 %}
+{% if label %}
+<div class="progress-labeled">
+    <span class="progress-text">{{ label }}</span>
+    <span class="progress-value">{{ pct }}%</span>
+</div>
+{% endif %}
+<div class="progress{% if size %} progress-{{ size }}{% endif %}" role="progressbar"
+     aria-valuenow="{{ value }}" aria-valuemin="0" aria-valuemax="{{ max }}">
+    <div class="progress-bar{% if variant %} progress-{{ variant }}{% endif %}"
+         style="width: {{ pct }}%"></div>
+</div>
+{% endmacro %}
+
+
+{# --- Form Input --------------------------------------------------- #}
+{% macro form_input(name, label="", type="text", placeholder="", required=false, hint="", error="", value="") %}
+<div class="form-group">
+    {% if label %}
+    <label class="form-label" for="{{ name }}">{{ label }}</label>
+    {% endif %}
+    <input
+        type="{{ type }}"
+        id="{{ name }}"
+        name="{{ name }}"
+        class="form-input{% if error %} is-error{% endif %}"
+        placeholder="{{ placeholder }}"
+        value="{{ value }}"
+        {% if required %}required{% endif %}
+    >
+    {% if error %}
+    <span class="form-error-text">{{ error }}</span>
+    {% elif hint %}
+    <span class="form-hint">{{ hint }}</span>
+    {% endif %}
+</div>
+{% endmacro %}
+
+
+{# --- Form Select -------------------------------------------------- #}
+{% macro form_select(name, options, label="", selected="", required=false, placeholder="Select...") %}
+<div class="form-group">
+    {% if label %}
+    <label class="form-label" for="{{ name }}">{{ label }}</label>
+    {% endif %}
+    <select id="{{ name }}" name="{{ name }}" class="form-select"{% if required %} required{% endif %}>
+        {% if placeholder %}
+        <option value="" disabled{% if not selected %} selected{% endif %}>{{ placeholder }}</option>
+        {% endif %}
+        {% for opt in options %}
+        <option value="{{ opt.value }}"{% if opt.value == selected %} selected{% endif %}>{{ opt.label }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endmacro %}
+
+
+{# --- Section Header ----------------------------------------------- #}
+{% macro section_header(title, subtitle="", overline="", centered=false) %}
+<div class="section-header{% if centered %} text-center{% endif %}">
+    {% if overline %}
+    <span class="section-overline">{{ overline }}</span>
+    {% endif %}
+    <h2 class="section-title">{{ title }}</h2>
+    {% if subtitle %}
+    <p class="section-subtitle">{{ subtitle }}</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+
+{# --- Modal -------------------------------------------------------- #}
+{% macro modal(id, title="") %}
+<div id="{{ id }}" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>{{ title }}</h3>
+            <button class="modal-close" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            {{ caller() }}
+        </div>
+    </div>
+</div>
+{% endmacro %}

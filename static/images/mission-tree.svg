@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="100%" height="100%">
+  <defs>
+    <linearGradient id="treeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ECFDF5"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient>
+    <linearGradient id="canopyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="600" height="340" fill="url(#treeBg)"/>
+  
+  <!-- Subtle Grid Pattern -->
+  <g stroke="#059669" stroke-width="0.75" stroke-opacity="0.15">
+    <line x1="0" y1="85" x2="600" y2="85" />
+    <line x1="0" y1="170" x2="600" y2="170" />
+    <line x1="0" y1="255" x2="600" y2="255" />
+    <line x1="150" y1="0" x2="150" y2="340" />
+    <line x1="300" y1="0" x2="300" y2="340" />
+    <line x1="450" y1="0" x2="450" y2="340" />
+  </g>
+
+  <!-- Rolling Hills -->
+  <path d="M0 260 Q 200 230, 400 250 T 600 230 L 600 340 L 0 340 Z" fill="#A7F3D0" opacity="0.7"/>
+  <path d="M0 280 Q 250 250, 500 280 L 600 270 L 600 340 L 0 340 Z" fill="#6EE7B7" opacity="0.6"/>
+
+  <!-- Native Sapling & Tree Centerpiece -->
+  <g transform="translate(230, 80)">
+    <!-- Tree Trunk -->
+    <path d="M65 190 L75 80 L85 80 L95 190 Z" fill="#78350F" opacity="0.8"/>
+    <!-- Foliage Layers -->
+    <circle cx="80" cy="80" r="55" fill="url(#canopyGrad)"/>
+    <circle cx="50" cy="70" r="40" fill="#059669"/>
+    <circle cx="110" cy="70" r="40" fill="#10B981" opacity="0.9"/>
+    <circle cx="80" cy="40" r="38" fill="#34D399"/>
+    
+    <!-- Soil Mound / Dig Site -->
+    <ellipse cx="80" cy="190" rx="60" ry="14" fill="#92400E" opacity="0.4"/>
+    <ellipse cx="80" cy="188" rx="45" ry="10" fill="#78350F"/>
+  </g>
+
+  <!-- Planting Shovel & Watering Tools -->
+  <g transform="translate(130, 180)">
+    <!-- Shovel -->
+    <line x1="15" y1="10" x2="35" y2="90" stroke="#64748B" stroke-width="5" stroke-linecap="round"/>
+    <path d="M28 85 L48 93 L40 110 L20 102 Z" fill="#475569"/>
+    <path d="M8 8 L22 14" stroke="#64748B" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- Watering Can -->
+  <g transform="translate(390, 190)">
+    <rect x="20" y="30" width="45" height="35" rx="6" fill="#059669"/>
+    <path d="M25 30 Q 42 12, 60 30" stroke="#047857" stroke-width="5" fill="none"/>
+    <line x1="65" y1="45" x2="88" y2="30" stroke="#059669" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="92" cy="27" r="7" fill="#047857"/>
+    <!-- Water Droplets -->
+    <circle cx="102" cy="38" r="3" fill="#0284C7"/>
+    <circle cx="108" cy="48" r="2.5" fill="#0284C7"/>
+    <circle cx="114" cy="58" r="2" fill="#0284C7"/>
+  </g>
+
+  <!-- Native Flora Tag Pill -->
+  <g transform="translate(380, 40)">
+    <rect x="0" y="0" width="175" height="36" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.06))"/>
+    <circle cx="18" cy="18" r="9" fill="#ECFDF5"/>
+    <path d="M14 18 L17 21 L22 15" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="35" y="23" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#111827">Native Species Validated</text>
+  </g>
+</svg>

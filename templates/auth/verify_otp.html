@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Email Address · EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        
+        <div class="auth-header">
+            <div class="auth-header-icon">✉️</div>
+            <h1 class="auth-title">Verify Your Email</h1>
+            <p class="auth-subtitle">
+                We sent a 6-digit confirmation code to:
+            </p>
+            <p style="font-weight: 600; color: var(--color-primary); margin-top: 0.25rem;">
+                {{ user.email }}
+            </p>
+        </div>
+
+        {# Verification Form #}
+        <form action="{{ url_for('auth.verify_otp') }}" method="POST" class="auth-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="otp-box-wrapper">
+                <label class="form-label mb-2" for="otp_code">Enter 6-Digit Code</label>
+                <input type="text" id="otp_code" name="otp_code" class="otp-input-field"
+                       maxlength="6" inputmode="numeric" pattern="[0-9]{6}"
+                       placeholder="••••••" required autocomplete="one-time-code">
+                <span class="caption mt-2" style="display: block;">
+                    Code expires in <strong>5 minutes</strong>.
+                </span>
+            </div>
+
+            <div class="mt-6">
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    Verify & Activate Account
+                </button>
+            </div>
+        </form>
+
+        {# Resend Form #}
+        <div class="text-center mt-6" style="border-top: 1px solid var(--color-border); padding-top: var(--space-4);">
+            <form action="{{ url_for('auth.resend_otp') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <p class="text-sm text-secondary" style="margin-bottom: var(--space-2);">
+                    Didn't receive the email?
+                </p>
+                <button type="submit" class="btn btn-ghost btn-sm" style="font-weight: 600;">
+                    ↺ Resend Code
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

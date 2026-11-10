@@ -1,0 +1,47 @@
+# ============================================================
+# EcoQuest .gitignore
+# ============================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# --- Virtual environments ---
+venv/
+.venv/
+env/
+.env
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Flask / Instance ---
+instance/
+*.db
+*.sqlite3
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Testing / Coverage ---
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# --- Logs ---
+*.log
+
+# User uploaded files
+static/uploads/

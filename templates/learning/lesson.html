@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} — EcoQuest Learning Academy{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/learning.css') }}">
+{% endblock %}
+
+{% block content %}
+<article class="lesson-page-container">
+    <!-- Breadcrumb Navigation -->
+    <nav class="lesson-breadcrumbs" aria-label="Breadcrumb">
+        <a href="{{ url_for('main.index') }}">Home</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('learning.modules') }}">Learning Academy</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('learning.modules', category=lesson.category.slug) }}">
+            {{ lesson.category.icon }} {{ lesson.category.name }}
+        </a>
+        <span class="separator">/</span>
+        <span aria-current="page" style="color: var(--color-text); font-weight: 600;">
+            {{ lesson.title }}
+        </span>
+    </nav>
+
+    <!-- Lesson Header -->
+    <header class="lesson-article-header">
+        <div class="lesson-header-chips">
+            <span class="lesson-category-tag">
+                <span>{{ lesson.category.icon }}</span> {{ lesson.category.name }}
+            </span>
+            <span class="badge badge-neutral">
+                ⏱️ {{ lesson.estimated_minutes }} min read
+            </span>
+            <span class="lesson-xp-badge">
+                ⭐ +{{ lesson.xp_reward }} XP Reward
+            </span>
+
+            {% if lesson.progress and lesson.progress.completed %}
+            <span class="lesson-status-badge completed">
+                ✓ Passed ({{ lesson.progress.highest_score }}%)
+            </span>
+            {% elif lesson.progress and lesson.progress.status == "in_progress" %}
+            <span class="lesson-status-badge in-progress">
+                ⏳ Score: {{ lesson.progress.highest_score }}% (70% required)
+            </span>
+            {% else %}
+            <span class="lesson-status-badge not-started">
+                ○ Not Completed
+            </span>
+            {% endif %}
+        </div>
+
+        <h1 class="lesson-article-title">{{ lesson.title }}</h1>
+    </header>
+
+    <!-- Introduction Lead Section -->
+    <div class="lesson-intro-lead">
+        {{ lesson.introduction }}
+    </div>
+
+    <!-- Educational Content Sections -->
+    <div class="lesson-content-body">
+        {% for section in lesson.content_sections %}
+        <section class="lesson-section-card">
+            <h2 class="lesson-section-title">
+                <span>🌱</span> {{ section.subtitle }}
+            </h2>
+            <p class="lesson-section-text">
+                {{ section.content }}
+            </p>
+        </section>
+        {% endfor %}
+    </div>
+
+    <!-- Important Facts Box -->
+    <section class="lesson-facts-box">
+        <div class="lesson-facts-header">
+            <span>💡</span> Key Environmental Facts & Scientific Data
+        </div>
+        <ul class="lesson-facts-list">
+            {% for fact in lesson.important_facts %}
+            <li>
+                <span class="bullet-icon">▸</span>
+                <span>{{ fact }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <!-- Key Takeaways Checklist -->
+    <section class="lesson-takeaways-box">
+        <div class="lesson-takeaways-title">
+            <span>🎯</span> Actionable Key Takeaways
+        </div>
+        <ul class="lesson-takeaways-list">
+            {% for takeaway in lesson.key_takeaways %}
+            <li>
+                <span class="takeaway-check">✓</span>
+                <span>{{ takeaway }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <!-- Interactive Quiz Section -->
+    <section id="quiz-section" class="lesson-quiz-section">
+        <div class="quiz-header">
+            <span class="quiz-badge">Interactive Module Verification</span>
+            <h2>Lesson Quiz</h2>
+            <p>
+                Answer the {{ lesson.questions|length }} questions below. A score of <strong>70% or higher</strong> is required to pass and earn <strong>50 XP</strong>.
+            </p>
+        </div>
+
+        <!-- Target container for dynamic JS results -->
+        <div id="quiz-results-container"></div>
+
+        {% if user %}
+        <form id="lesson-quiz-form"
+              class="quiz-form"
+              data-lesson-slug="{{ lesson.slug }}"
+              method="POST"
+              action="{{ url_for('learning.submit_quiz', slug=lesson.slug) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            {% for q in lesson.questions %}
+            <div class="quiz-question-card" data-question-id="{{ q.id }}">
+                <div class="quiz-question-number">Question {{ loop.index }} of {{ lesson.questions|length }}</div>
+                <h3 class="quiz-question-text">{{ q.text }}</h3>
+
+                <div class="quiz-options-grid">
+                    {% for opt in q.options %}
+                    <label class="quiz-option-label">
+                        <input type="radio"
+                               name="question_{{ q.id }}"
+                               value="{{ opt.id }}"
+                               required>
+                        <span>{{ opt.text }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <div style="text-align: center; margin-top: 1rem;">
+                <button type="submit" id="submit-quiz-btn" class="btn btn-primary btn-lg" style="min-width: 250px;">
+                    Submit Quiz for Verification
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div style="text-align: center; padding: 2rem; background-color: var(--color-bg); border-radius: 0.75rem; border: 1px dashed var(--color-border);">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--color-text); margin-bottom: 0.5rem;">
+                Sign in to take the quiz and earn 50 XP
+            </h3>
+            <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                Create a free account or log in to submit your answers, verify your comprehension, and track your global environmental impact.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a href="{{ url_for('auth.login', next=url_for('learning.view_lesson', slug=lesson.slug)) }}" class="btn btn-secondary">
+                    Log In
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
+                    Join EcoQuest Free
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Navigation Footer -->
+    <footer class="lesson-nav-footer">
+        <a href="{{ url_for('learning.modules', category=lesson.category.slug) }}" class="btn btn-secondary">
+            ← Back to {{ lesson.category.name }}
+        </a>
+
+        {% if lesson.next_lesson %}
+        <a href="{{ url_for('learning.view_lesson', slug=lesson.next_lesson.slug) }}" class="btn btn-primary">
+            Next Lesson: {{ lesson.next_lesson.title }} →
+        </a>
+        {% else %}
+        <a href="{{ url_for('learning.modules') }}" class="btn btn-primary">
+            Browse All Categories →
+        </a>
+        {% endif %}
+    </footer>
+</article>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/learning.js') }}"></script>
+{% endblock %}

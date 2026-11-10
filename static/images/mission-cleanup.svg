@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="100%" height="100%">
+  <defs>
+    <linearGradient id="cleanBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ECFDF5"/>
+      <stop offset="100%" stop-color="#D1FAE5"/>
+    </linearGradient>
+    <linearGradient id="cleanGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#059669" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#059669" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="600" height="340" fill="url(#cleanBg)"/>
+  
+  <!-- Subtle Grid Pattern -->
+  <g stroke="#10B981" stroke-width="0.75" stroke-opacity="0.2">
+    <line x1="0" y1="85" x2="600" y2="85" />
+    <line x1="0" y1="170" x2="600" y2="170" />
+    <line x1="0" y1="255" x2="600" y2="255" />
+    <line x1="150" y1="0" x2="150" y2="340" />
+    <line x1="300" y1="0" x2="300" y2="340" />
+    <line x1="450" y1="0" x2="450" y2="340" />
+  </g>
+
+  <!-- Ground Plane -->
+  <path d="M0 260 Q 150 240, 300 255 T 600 250 L 600 340 L 0 340 Z" fill="#A7F3D0" opacity="0.6"/>
+  <path d="M0 275 Q 200 265, 400 275 T 600 270 L 600 340 L 0 340 Z" fill="#6EE7B7" opacity="0.5"/>
+
+  <!-- Park Bench / Public Space Element -->
+  <g transform="translate(100, 200)">
+    <rect x="0" y="30" width="70" height="8" rx="3" fill="#047857"/>
+    <rect x="10" y="38" width="6" height="30" rx="2" fill="#065F46"/>
+    <rect x="54" y="38" width="6" height="30" rx="2" fill="#065F46"/>
+    <path d="M -5 18 L 75 18" stroke="#047857" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- Clean Bin / Waste Separation Hub -->
+  <g transform="translate(240, 150)">
+    <!-- Shadow -->
+    <ellipse cx="60" cy="120" rx="55" ry="12" fill="#047857" opacity="0.2"/>
+    <!-- Bin Body -->
+    <rect x="25" y="35" width="70" height="85" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="3"/>
+    <!-- Eco Recycle Symbol -->
+    <circle cx="60" cy="75" r="20" fill="#ECFDF5"/>
+    <path d="M60 62 L66 73 L54 73 Z" fill="#059669"/>
+    <path d="M72 78 L66 88 L60 78 Z" fill="#059669"/>
+    <path d="M48 78 L54 88 L48 88 Z" fill="#059669"/>
+    <!-- Lid -->
+    <rect x="18" y="25" width="84" height="12" rx="4" fill="#059669"/>
+    <rect x="42" y="18" width="36" height="8" rx="3" fill="#047857"/>
+  </g>
+
+  <!-- Volunteer Hero Figure (stylized modern tech avatar) -->
+  <g transform="translate(380, 130)">
+    <!-- Shadow -->
+    <ellipse cx="40" cy="140" rx="35" ry="8" fill="#047857" opacity="0.2"/>
+    <!-- Body -->
+    <path d="M25 80 Q 40 70, 55 80 L 60 135 L 20 135 Z" fill="#047857"/>
+    <circle cx="40" cy="50" r="18" fill="#111827"/>
+    <!-- Eco Bag in Hand -->
+    <path d="M58 90 Q 75 95, 78 115 L 68 135 L 52 130 Z" fill="#059669"/>
+    <path d="M65 92 Q 72 82, 75 92" stroke="#047857" stroke-width="3" fill="none"/>
+    <!-- Cleaning Grabber Tool -->
+    <line x1="15" y1="95" x2="-25" y2="135" stroke="#64748B" stroke-width="3" stroke-linecap="round"/>
+    <path d="M-25 135 L-30 142 M-25 135 L-22 144" stroke="#059669" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Sparkles / Spark of Cleanliness -->
+  <g fill="#059669">
+    <path d="M190 100 Q 190 115, 205 115 Q 190 115, 190 130 Q 190 115, 175 115 Q 190 115, 190 100 Z" opacity="0.8"/>
+    <path d="M470 90 Q 470 100, 480 100 Q 470 100, 470 110 Q 470 100, 460 100 Q 470 100, 470 90 Z" opacity="0.6"/>
+  </g>
+
+  <!-- Tech Verification Badge Pill -->
+  <g transform="translate(390, 40)">
+    <rect x="0" y="0" width="165" height="36" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.06))"/>
+    <circle cx="18" cy="18" r="9" fill="#ECFDF5"/>
+    <path d="M14 18 L17 21 L22 15" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="35" y="23" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#111827">Geo-Verified Area</text>
+  </g>
+</svg>

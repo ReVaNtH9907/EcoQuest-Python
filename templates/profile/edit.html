@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile · EcoQuest{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 560px;">
+    <div class="auth-card">
+        
+        <div class="auth-header">
+            <h1 class="auth-title">Edit Your Profile</h1>
+            <p class="auth-subtitle">Update your personal information and profile picture.</p>
+        </div>
+
+        <form action="{{ url_for('profile.edit_profile') }}" method="POST" enctype="multipart/form-data" class="auth-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            {# Profile Picture #}
+            <div class="avatar-upload-group">
+                <div class="avatar-preview-box">
+                    <img id="avatar-preview-img" class="avatar-preview-img"
+                         src="{{ user.avatar_url }}"
+                         alt="{{ user.full_name }}" />
+                </div>
+                <label for="profile_picture" class="avatar-file-label">
+                    <span>📷 Change Photo</span>
+                </label>
+                <input type="file" id="profile_picture" name="profile_picture"
+                       class="avatar-file-input" accept="image/png,image/jpeg,image/jpg,image/webp">
+                <span class="caption mt-1">PNG, JPG, or WebP up to 5 MB</span>
+            </div>
+
+            {# Full Name #}
+            <div class="form-group">
+                <label class="form-label" for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" class="form-input"
+                       value="{{ user.full_name }}" required>
+            </div>
+
+            {# Phone #}
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" class="form-input"
+                       value="{{ user.phone }}" required>
+            </div>
+
+            {# City & College #}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+                <div class="form-group">
+                    <label class="form-label" for="city">City</label>
+                    <input type="text" id="city" name="city" class="form-input"
+                           value="{{ user.city }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="college">College / Org</label>
+                    <input type="text" id="college" name="college" class="form-input"
+                           value="{{ user.college }}" required>
+                </div>
+            </div>
+
+            {# Submit & Cancel #}
+            <div class="mt-6" style="display: flex; gap: var(--space-3);">
+                <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                    Save Changes
+                </button>
+                <a href="{{ url_for('profile.view_profile') }}" class="btn btn-secondary btn-lg">
+                    Cancel
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

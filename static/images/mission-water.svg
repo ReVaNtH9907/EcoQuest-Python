@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EFF6FF" />
+      <stop offset="100%" stop-color="#DBEAFE" />
+    </linearGradient>
+    <linearGradient id="waterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+    <linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bgGrad)" />
+  <!-- Ripples -->
+  <ellipse cx="200" cy="220" rx="120" ry="25" fill="#BFDBFE" opacity="0.6" />
+  <ellipse cx="200" cy="220" rx="80" ry="16" fill="#93C5FD" opacity="0.7" />
+  <ellipse cx="200" cy="220" rx="40" ry="8" fill="#60A5FA" opacity="0.8" />
+  <!-- Large Water Drop -->
+  <path d="M 200 60 C 200 60 140 140 140 185 A 60 60 0 1 0 260 185 C 260 140 200 60 200 60 Z" fill="url(#dropGrad)" />
+  <!-- Drop Highlights -->
+  <path d="M 180 110 C 170 130 160 160 160 180 A 15 15 0 0 1 155 170 C 155 150 165 125 180 110 Z" fill="#FFFFFF" opacity="0.6" />
+  <!-- Leaf inside drop representing eco water conservation -->
+  <path d="M 200 150 C 220 160 225 185 210 195 C 195 205 185 190 190 175 C 193 165 200 150 200 150 Z" fill="#10B981" />
+  <path d="M 190 190 C 200 180 210 170 210 170" stroke="#047857" stroke-width="2" stroke-linecap="round" />
+  <!-- Small ambient droplets -->
+  <circle cx="120" cy="110" r="8" fill="url(#waterGrad)" opacity="0.7" />
+  <circle cx="280" cy="120" r="10" fill="url(#waterGrad)" opacity="0.7" />
+  <circle cx="295" cy="85" r="5" fill="url(#waterGrad)" opacity="0.5" />
+</svg>

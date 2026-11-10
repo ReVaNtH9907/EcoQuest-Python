@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}404 — Page Not Found · EcoQuest{% endblock %}
+
+{% block content %}
+<div class="container text-center" style="padding: var(--space-20) 0;">
+    <h1 style="font-size: 5rem; color: var(--color-primary); margin-bottom: var(--space-4);">404</h1>
+    <h2 style="margin-bottom: var(--space-4);">Page not found</h2>
+    <p style="max-width: 400px; margin: 0 auto var(--space-8);">
+        The page you're looking for doesn't exist or has been moved.
+    </p>
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary">← Back to Home</a>
+</div>
+{% endblock %}
