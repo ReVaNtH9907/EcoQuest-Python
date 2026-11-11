@@ -491,3 +491,73 @@ def test_local_development_preserves_standard_instance_path(monkeypatch):
     assert "sqlite" in app.config["SQLALCHEMY_DATABASE_URI"]
 
 
+# --- 10. Static Asset Loading & Vercel Routing Tests ---
+
+def test_static_css_assets_return_200_through_flask():
+    """Verify all CSS files return HTTP 200 with text/css mimetype through Flask."""
+    app = create_app("testing")
+    client = app.test_client()
+
+    css_files = [
+        "style.css",
+        "landing.css",
+        "auth.css",
+        "dashboard.css",
+        "leaderboard.css",
+        "learning.css",
+        "missions.css",
+    ]
+    for css in css_files:
+        res = client.get(f"/static/css/{css}")
+        assert res.status_code == 200, f"Failed to load /static/css/{css}"
+        assert "text/css" in res.content_type, f"Invalid mimetype for /static/css/{css}: {res.content_type}"
+        assert len(res.data) > 0, f"Empty content for /static/css/{css}"
+
+
+def test_static_js_and_image_assets_return_200():
+    """Verify JavaScript and SVG image assets return HTTP 200 with correct mimetypes."""
+    app = create_app("testing")
+    client = app.test_client()
+
+    res_js = client.get("/static/js/app.js")
+    assert res_js.status_code == 200
+    assert "javascript" in res_js.content_type
+
+    res_svg = client.get("/static/images/default-avatar.svg")
+    assert res_svg.status_code == 200
+    assert "image/svg+xml" in res_svg.content_type
+
+
+def test_homepage_renders_static_stylesheet_links():
+    """Verify homepage HTML links to /static/css/style.css and /static/css/landing.css."""
+    app = create_app("testing")
+    client = app.test_client()
+
+    res = client.get("/")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+
+    assert 'href="/static/css/style.css"' in html
+    assert 'href="/static/css/landing.css"' in html
+    assert 'src="/static/js/app.js"' in html
+
+
+def test_vercel_json_routes_static_requests_to_python():
+    """Verify vercel.json does not intercept /static/ with unbuilt edge rules."""
+    import json
+    vercel_path = os.path.join(os.path.dirname(__file__), "..", "vercel.json")
+    with open(vercel_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    # Ensure all routes are forwarded to the Python WSGI entrypoint
+    routes = config.get("routes", [])
+    has_catchall = any(r.get("dest") == "api/index.py" and r.get("src") == "/(.*)" for r in routes)
+    assert has_catchall, "vercel.json missing catch-all route to api/index.py"
+
+    # Ensure there is no broken static rule bypassing Python
+    for r in routes:
+        if "/static/" in r.get("src", ""):
+            assert r.get("dest") == "api/index.py", f"Broken static route rule: {r}"
+
+
+

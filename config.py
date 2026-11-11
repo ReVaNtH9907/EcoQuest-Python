@@ -62,6 +62,7 @@ class Config:
     MAX_EVIDENCE_SIZE = 25 * 1024 * 1024   # 25 MB max per evidence item
     ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
     ALLOWED_EVIDENCE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "webm", "mp4"}
+    SEND_FILE_MAX_AGE_DEFAULT = 43200  # 12 hours caching for static assets
 
     # Session configuration
     PERMANENT_SESSION_LIFETIME = 86400 * 7  # 7 days

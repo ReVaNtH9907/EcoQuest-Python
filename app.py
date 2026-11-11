@@ -30,10 +30,12 @@ def create_app(config_name=None):
         config_name = os.environ.get("FLASK_ENV", "development")
 
     is_vercel = bool(os.environ.get("VERCEL"))
+    project_root = os.path.abspath(os.path.dirname(__file__))
 
     flask_kwargs = {
-        "template_folder": "templates",
-        "static_folder": "static",
+        "template_folder": os.path.join(project_root, "templates"),
+        "static_folder": os.path.join(project_root, "static"),
+        "static_url_path": "/static",
         "instance_relative_config": True,
     }
     if is_vercel:
