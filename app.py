@@ -39,12 +39,36 @@ def create_app(config_name=None):
     # Load configuration
     app.config.from_object(config_by_name[config_name])
 
+    # Validate production SECRET_KEY security
+    if config_name == "production" or os.environ.get("FLASK_ENV") == "production":
+        # Always inspect current environment variable in production
+        secret_key = os.environ.get("SECRET_KEY")
+        insecure_keys = {
+            "dev-secret-key-change-in-production",
+            "replace-with-a-strong-random-key",
+            "secret",
+            "changeme",
+            "ecoquest-dev-local-secret-key-3b7c89f0",
+        }
+        if not secret_key or secret_key.strip() in insecure_keys or len(secret_key.strip()) < 16:
+            raise ValueError(
+                "Insecure or missing SECRET_KEY in production environment. "
+                "Set a strong SECRET_KEY (minimum 16 characters) via environment variables."
+            )
+        app.config["SECRET_KEY"] = secret_key
+
     # Ensure required directories exist
     os.makedirs(app.instance_path, exist_ok=True)
     if "UPLOAD_FOLDER" in app.config:
-        os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+        try:
+            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+        except OSError:
+            pass
     if "EVIDENCE_FOLDER" in app.config:
-        os.makedirs(app.config["EVIDENCE_FOLDER"], exist_ok=True)
+        try:
+            os.makedirs(app.config["EVIDENCE_FOLDER"], exist_ok=True)
+        except OSError:
+            pass
 
     # Initialize extensions
     db.init_app(app)
@@ -52,24 +76,31 @@ def create_app(config_name=None):
 
     # Setup database tables automatically
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception:
+            pass
 
-        # Ensure existing SQLite tables have updated columns
+        # Dialect-agnostic schema synchronization (works for SQLite and PostgreSQL)
         try:
             with db.engine.connect() as conn:
-                from sqlalchemy import text
-                user_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
-                if user_cols and "total_xp" not in user_cols:
-                    conn.execute(text("ALTER TABLE users ADD COLUMN total_xp INTEGER DEFAULT 0 NOT NULL"))
-                    conn.commit()
-                if user_cols and "is_admin" not in user_cols:
-                    conn.execute(text("ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0 NOT NULL"))
-                    conn.commit()
+                from sqlalchemy import inspect, text
+                inspector = inspect(db.engine)
+                table_names = inspector.get_table_names()
 
-                sub_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(submissions)")).fetchall()]
-                if sub_cols:
+                if "users" in table_names:
+                    user_cols = [c["name"] for c in inspector.get_columns("users")]
+                    if "total_xp" not in user_cols:
+                        conn.execute(text("ALTER TABLE users ADD COLUMN total_xp INTEGER DEFAULT 0 NOT NULL"))
+                        conn.commit()
+                    if "is_admin" not in user_cols:
+                        conn.execute(text("ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE NOT NULL"))
+                        conn.commit()
+
+                if "submissions" in table_names:
+                    sub_cols = [c["name"] for c in inspector.get_columns("submissions")]
                     new_sub_cols = [
-                        ("confidence_score", "REAL"),
+                        ("confidence_score", "FLOAT"),
                         ("evidence_relevance", "VARCHAR(50)"),
                         ("before_after_comparison", "TEXT"),
                         ("detected_inconsistencies", "TEXT"),
@@ -77,12 +108,12 @@ def create_app(config_name=None):
                         ("ai_findings", "TEXT"),
                         ("review_decision", "VARCHAR(50)"),
                         ("reviewed_by", "VARCHAR(100)"),
-                        ("reviewed_at", "DATETIME"),
+                        ("reviewed_at", "TIMESTAMP"),
                         ("image_hash_before", "VARCHAR(64)"),
                         ("image_hash_after", "VARCHAR(64)"),
-                        ("is_demo_verification", "BOOLEAN DEFAULT 0 NOT NULL"),
+                        ("is_demo_verification", "BOOLEAN DEFAULT FALSE NOT NULL"),
                         ("admin_feedback", "TEXT"),
-                        ("xp_awarded", "BOOLEAN DEFAULT 0 NOT NULL"),
+                        ("xp_awarded", "BOOLEAN DEFAULT FALSE NOT NULL"),
                         ("xp_awarded_amount", "INTEGER DEFAULT 0 NOT NULL"),
                     ]
                     for col_name, col_type in new_sub_cols:
@@ -172,6 +203,15 @@ def _register_error_handlers(app):
     @app.errorhandler(500)
     def internal_server_error(error):
         return render_template("errors/500.html"), 500
+
+
+# WSGI application discovery for serverless / production servers (e.g. Vercel, Gunicorn)
+app = None
+try:
+    app = create_app()
+except ValueError:
+    # Occurs if FLASK_ENV=production is set without SECRET_KEY during initial import
+    pass
 
 
 # --- Development server entry point ---

@@ -61,10 +61,13 @@ class User(db.Model):
 
     @property
     def avatar_url(self) -> str:
-        """Return the static path for the user's profile image."""
+        """Return the secure authenticated proxy URL or default image path."""
         if not self.profile_picture or self.profile_picture == "default-avatar.svg":
             return "/static/images/default-avatar.svg"
-        return f"/static/uploads/profiles/{self.profile_picture}"
+        raw = self.profile_picture
+        if "/" in raw:
+            raw = raw.rsplit("/", 1)[-1]
+        return f"/profile/avatar/{raw}"
 
     @property
     def is_demo(self) -> bool:

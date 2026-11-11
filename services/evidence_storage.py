@@ -39,9 +39,14 @@ def _get_evidence_folder() -> str:
     """Resolve absolute path to private evidence storage directory."""
     if current_app and "EVIDENCE_FOLDER" in current_app.config:
         folder = current_app.config["EVIDENCE_FOLDER"]
+    elif os.environ.get("VERCEL"):
+        folder = "/tmp/evidence"
     else:
         folder = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "instance", "evidence")
-    os.makedirs(folder, exist_ok=True)
+    try:
+        os.makedirs(folder, exist_ok=True)
+    except OSError:
+        pass
     return os.path.abspath(folder)
 
 
@@ -111,13 +116,23 @@ def save_evidence_media(
     safe_prefix = secure_filename(prefix) or "evidence"
     filename = f"{safe_prefix}_{unique_id}_{timestamp}.{clean_ext}"
 
-    # Path traversal safety check
-    target_path = os.path.abspath(os.path.join(folder, filename))
-    if os.path.commonpath([folder, target_path]) != folder:
-        raise ValueError("Invalid storage path detected.")
+    # Persistent cloud storage via Supabase Storage if configured
+    try:
+        from services.supabase_storage import is_supabase_storage_enabled, upload_evidence_to_supabase
+        if is_supabase_storage_enabled():
+            mime = "video/webm" if is_video else f"image/{'jpeg' if clean_ext == 'jpg' else clean_ext}"
+            upload_evidence_to_supabase(raw_bytes, filename, content_type=mime)
+    except Exception:
+        pass
 
-    with open(target_path, "wb") as f:
-        f.write(raw_bytes)
+    # Path traversal safety check and local storage persistence
+    try:
+        target_path = os.path.abspath(os.path.join(folder, filename))
+        if os.path.commonpath([folder, target_path]) == folder:
+            with open(target_path, "wb") as f:
+                f.write(raw_bytes)
+    except OSError:
+        pass
 
     return filename
 

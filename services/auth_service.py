@@ -71,20 +71,38 @@ def validate_and_save_profile_picture(file_storage) -> tuple[bool, str, str | No
     safe_name = secure_filename(filename)
     unique_filename = f"{uuid.uuid4().hex[:12]}_{safe_name}"
 
-    upload_dir = current_app.config.get("UPLOAD_FOLDER")
-    os.makedirs(upload_dir, exist_ok=True)
-    destination = os.path.join(upload_dir, unique_filename)
+    # Read bytes for storage persistence
+    file_bytes = file_storage.read()
+    file_storage.seek(0)
 
-    file_storage.save(destination)
+    if not file_bytes:
+        return False, "Uploaded image is empty.", None
 
-    # Check file size after save (max 5 MB)
-    max_size = current_app.config.get("MAX_CONTENT_LENGTH", 5 * 1024 * 1024)
-    if os.path.getsize(destination) > max_size:
+    # Check file size (max 5 MB)
+    max_size = current_app.config.get("MAX_CONTENT_LENGTH", 5 * 1024 * 1024) if current_app else 5 * 1024 * 1024
+    if len(file_bytes) > max_size:
+        return False, "Image size exceeds the 5 MB limit. Please select a smaller photo.", None
+
+    # Persistent cloud storage via Supabase Storage if configured
+    try:
+        from services.supabase_storage import is_supabase_storage_enabled, upload_profile_picture_to_supabase
+        if is_supabase_storage_enabled():
+            upload_profile_picture_to_supabase(
+                file_bytes, unique_filename, content_type=file_storage.mimetype
+            )
+    except Exception:
+        pass
+
+    # Local filesystem storage fallback and cache
+    upload_dir = current_app.config.get("UPLOAD_FOLDER") if current_app else None
+    if upload_dir:
         try:
-            os.remove(destination)
+            os.makedirs(upload_dir, exist_ok=True)
+            destination = os.path.join(upload_dir, unique_filename)
+            with open(destination, "wb") as f:
+                f.write(file_bytes)
         except OSError:
             pass
-        return False, "Image size exceeds the 5 MB limit. Please select a smaller photo.", None
 
     return True, "", unique_filename
 

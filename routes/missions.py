@@ -512,10 +512,21 @@ def get_evidence(filename):
         abort(403)
 
     abs_path = get_evidence_path(filename)
-    if not abs_path:
-        abort(404)
+    if abs_path and os.path.isfile(abs_path):
+        directory = os.path.dirname(abs_path)
+        clean_filename = os.path.basename(abs_path)
+        return send_from_directory(directory, clean_filename)
 
-    directory = os.path.dirname(abs_path)
-    clean_filename = os.path.basename(abs_path)
-    return send_from_directory(directory, clean_filename)
+    # Cloud persistence fallback via private Supabase Storage
+    try:
+        from services.supabase_storage import is_supabase_storage_enabled, download_evidence_from_supabase
+        if is_supabase_storage_enabled():
+            media_bytes, content_type = download_evidence_from_supabase(filename)
+            if media_bytes:
+                from flask import Response
+                return Response(media_bytes, mimetype=content_type or "application/octet-stream")
+    except Exception:
+        pass
+
+    abort(404)
 

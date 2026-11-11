@@ -5,6 +5,7 @@ Provides profile overview, profile editing, and password updating.
 Protected with session authentication requirements.
 """
 
+import os
 from flask import (
     Blueprint,
     render_template,
@@ -14,7 +15,12 @@ from flask import (
     flash,
     g,
     jsonify,
+    send_from_directory,
+    abort,
+    current_app,
+    Response,
 )
+from werkzeug.utils import secure_filename
 from services import (
     login_required,
     update_user_profile,
@@ -112,3 +118,39 @@ def change_password():
         flash(message, "error")
 
     return render_template("profile/change_password.html", user=user)
+
+
+@profile_bp.route("/avatar/<filename>")
+def get_avatar(filename):
+    """
+    Secure authenticated server-side proxy for private user profile pictures.
+    Fetches avatar from private Supabase Storage bucket ('profile-pictures')
+    using server-side service-role key, with local disk fallback.
+    Never exposes service-role key to client.
+    """
+    if not getattr(g, "current_user", None):
+        abort(401)
+
+    if not filename:
+        abort(404)
+
+    clean_name = secure_filename(filename)
+    if not clean_name or clean_name != filename:
+        abort(404)
+
+    # 1. Local filesystem fallback / cache
+    upload_dir = current_app.config.get("UPLOAD_FOLDER")
+    if upload_dir:
+        abs_dir = os.path.abspath(upload_dir)
+        target_path = os.path.abspath(os.path.join(abs_dir, clean_name))
+        if os.path.commonpath([abs_dir, target_path]) == abs_dir and os.path.isfile(target_path):
+            return send_from_directory(abs_dir, clean_name)
+
+    # 2. Private Supabase Storage fetch via service-role key
+    from services.supabase_storage import is_supabase_storage_enabled, download_profile_picture_from_supabase
+    if is_supabase_storage_enabled():
+        img_bytes, content_type = download_profile_picture_from_supabase(clean_name)
+        if img_bytes:
+            return Response(img_bytes, mimetype=content_type or "image/jpeg")
+
+    abort(404)
