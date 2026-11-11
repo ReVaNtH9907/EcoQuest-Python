@@ -29,7 +29,7 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get("FLASK_ENV", "development")
 
-    is_vercel = bool(os.environ.get("VERCEL"))
+    is_vercel = os.environ.get("VERCEL") == "1"
     project_root = os.path.abspath(os.path.dirname(__file__))
 
     flask_kwargs = {
@@ -122,8 +122,12 @@ def create_app(config_name=None):
     with app.app_context():
         try:
             db.create_all()
-        except Exception:
-            pass
+        except Exception as e:
+            app.logger.error("Database table creation error: %s", e, exc_info=True)
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
 
         # Dialect-agnostic schema synchronization (works for SQLite and PostgreSQL)
         try:
@@ -164,29 +168,52 @@ def create_app(config_name=None):
                         if col_name not in sub_cols:
                             conn.execute(text(f"ALTER TABLE submissions ADD COLUMN {col_name} {col_type}"))
                     conn.commit()
-        except Exception:
-            pass
+        except Exception as e:
+            app.logger.warning("Schema synchronization warning (non-fatal, concurrent instance may have migrated): %s", e)
 
-        # Seed learning curriculum if not already present
+        # Seed learning curriculum if not already present (safe against concurrent instance startup)
         try:
-            from services.learning_service import seed_learning_curriculum
-            seed_learning_curriculum(db.session)
-        except Exception:
-            pass
+            from models import LessonCategory
+            if LessonCategory.query.first() is None:
+                from services.learning_service import seed_learning_curriculum
+                seed_learning_curriculum(db.session)
+        except Exception as e:
+            db.session.rollback()
+            from sqlalchemy.exc import IntegrityError
+            if isinstance(e, IntegrityError):
+                app.logger.info("Learning curriculum seeded by concurrent serverless instance.")
+            else:
+                app.logger.error("Failed to seed learning curriculum: %s", e, exc_info=True)
 
-        # Seed environmental missions if not already present
+        # Seed environmental missions if not already present (safe against concurrent instance startup)
         try:
-            from services.mission_service import seed_missions
-            seed_missions(db.session)
-        except Exception:
-            pass
+            from models import Mission
+            if Mission.query.first() is None:
+                from services.mission_service import seed_missions
+                seed_missions(db.session)
+        except Exception as e:
+            db.session.rollback()
+            from sqlalchemy.exc import IntegrityError
+            if isinstance(e, IntegrityError):
+                app.logger.info("Missions seeded by concurrent serverless instance.")
+            else:
+                app.logger.error("Failed to seed missions: %s", e, exc_info=True)
 
-        # Seed achievement badges if not already present
+        # Seed achievement badges if not already present (safe against concurrent instance startup)
         try:
-            from services.gamification_service import seed_badges
-            seed_badges(db.session)
-        except Exception:
-            pass
+            from models import Badge
+            if Badge.query.first() is None:
+                from services.gamification_service import seed_badges
+                seed_badges(db.session)
+        except Exception as e:
+            db.session.rollback()
+            from sqlalchemy.exc import IntegrityError
+            if isinstance(e, IntegrityError):
+                app.logger.info("Badges seeded by concurrent serverless instance.")
+            else:
+                app.logger.error("Failed to seed badges: %s", e, exc_info=True)
+        finally:
+            db.session.remove()
 
     # Session authentication hook
     @app.before_request
@@ -195,7 +222,11 @@ def create_app(config_name=None):
         if user_id is None:
             g.current_user = None
         else:
-            g.current_user = db.session.get(User, user_id)
+            try:
+                g.current_user = db.session.get(User, user_id)
+            except Exception:
+                db.session.rollback()
+                g.current_user = None
 
     # Context processors for Jinja2 templates
     @app.context_processor
@@ -251,11 +282,12 @@ def _register_error_handlers(app):
 
 # WSGI application discovery for serverless / production servers (e.g. Vercel, Gunicorn)
 app = None
-try:
-    app = create_app()
-except ValueError:
-    # Occurs if FLASK_ENV=production is set without SECRET_KEY during initial import
-    pass
+if os.environ.get("VERCEL") != "1":
+    try:
+        app = create_app()
+    except ValueError:
+        # Occurs if FLASK_ENV=production is set without SECRET_KEY during initial import
+        pass
 
 
 # --- Development server entry point ---

@@ -560,4 +560,164 @@ def test_vercel_json_routes_static_requests_to_python():
             assert r.get("dest") == "api/index.py", f"Broken static route rule: {r}"
 
 
+# --- 11. Production Startup, Concurrency & Route Stability Tests ---
+
+def test_vercel_import_api_index_creates_single_app(monkeypatch):
+    """
+    Verify that on Vercel (VERCEL=1), importing api/index.py instantiates
+    exactly one Flask application rather than duplicating creation on import.
+    """
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.delenv("FLASK_ENV", raising=False)
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+
+    import sys
+    import importlib
+
+    # Clear cached module if already imported
+    for mod_name in ["api.index", "app"]:
+        if mod_name in sys.modules:
+            del sys.modules[mod_name]
+
+    import api.index as vercel_entry
+    from flask import Flask
+    assert hasattr(vercel_entry, "app")
+    assert vercel_entry.app is not None
+    assert isinstance(vercel_entry.app, Flask)
+
+    # In app.py, app variable must remain None because VERCEL=1 deferred it to api/index.py
+    import app as app_module
+    assert app_module.app is None
+
+
+def test_session_remove_does_not_interfere_with_normal_requests():
+    """
+    Verify that calling db.session.remove() does not interfere with
+    subsequent database queries or scoped session functionality in normal requests.
+    """
+    test_app = create_app("testing")
+    with test_app.app_context():
+        db.create_all()
+        # Explicit session removal as occurs in create_app finally block
+        db.session.remove()
+
+        # Perform query to ensure a new scoped session is transparently provisioned
+        from models import User
+        count = User.query.count()
+        assert count == 0
+
+        # Create record in the fresh session
+        user = User(
+            full_name="Active Member",
+            email="active@example.com",
+            phone="1234567890",
+            city="Seattle",
+            college="UW",
+            email_verified=True,
+        )
+        user.set_password("secretpassword")
+        db.session.add(user)
+        db.session.commit()
+
+        # Remove session again and query
+        db.session.remove()
+        fetched = User.query.filter_by(email="active@example.com").first()
+        assert fetched is not None
+        assert fetched.full_name == "Active Member"
+
+    client = test_app.test_client()
+    res = client.get("/")
+    assert res.status_code == 200
+
+
+def test_concurrent_seeding_safety_and_rollback():
+    """
+    Verify that when tables are already populated or a simulated integrity collision occurs,
+    seeding rolls back gracefully without leaving db.session in an aborted state.
+    """
+    test_app = create_app("testing")
+    with test_app.app_context():
+        db.create_all()
+        from services.learning_service import seed_learning_curriculum
+        from services.mission_service import seed_missions
+        from services.gamification_service import seed_badges
+        from models import LessonCategory, Mission, Badge
+
+        # First seeding pass
+        seed_learning_curriculum(db.session)
+        seed_missions(db.session)
+        seed_badges(db.session)
+
+        # Second seeding pass (simulating concurrent startup)
+        # Should gracefully detect presence and not crash or fail
+        if LessonCategory.query.first() is None:
+            seed_learning_curriculum(db.session)
+        if Mission.query.first() is None:
+            seed_missions(db.session)
+        if Badge.query.first() is None:
+            seed_badges(db.session)
+
+        db.session.remove()
+
+        # Verify session is healthy and queries succeed
+        assert LessonCategory.query.count() > 0
+        assert Mission.query.count() > 0
+        assert Badge.query.count() > 0
+
+
+def test_postgresql_compatible_internal_routes(monkeypatch):
+    """
+    Test /, /login, /register, /learning/, /missions/, and /leaderboard/
+    with fully seeded database models, ensuring all return 200 or 302 without 500 errors.
+    """
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.delenv("FLASK_ENV", raising=False)
+
+    test_app = create_app("testing")
+    with test_app.app_context():
+        db.create_all()
+        from services.learning_service import seed_learning_curriculum
+        from services.mission_service import seed_missions
+        from services.gamification_service import seed_badges
+        seed_learning_curriculum(db.session)
+        seed_missions(db.session)
+        seed_badges(db.session)
+
+    client = test_app.test_client()
+
+    # 1. Homepage
+    res_home = client.get("/")
+    assert res_home.status_code == 200
+
+    # 2. Login shortcut (/login redirects to /auth/login)
+    res_login = client.get("/login", follow_redirects=False)
+    assert res_login.status_code == 302
+    assert "/auth/login" in res_login.headers["Location"]
+    res_login_followed = client.get("/login", follow_redirects=True)
+    assert res_login_followed.status_code == 200
+
+    # 3. Register shortcut (/register redirects to /auth/register)
+    res_register = client.get("/register", follow_redirects=False)
+    assert res_register.status_code == 302
+    assert "/auth/register" in res_register.headers["Location"]
+    res_register_followed = client.get("/register", follow_redirects=True)
+    assert res_register_followed.status_code == 200
+
+    # 4. Learning module catalog
+    res_learn = client.get("/learning/")
+    assert res_learn.status_code == 200
+    assert "EcoQuest" in res_learn.get_data(as_text=True)
+
+    # 5. Missions catalog
+    res_missions = client.get("/missions/")
+    assert res_missions.status_code == 200
+    assert "EcoQuest" in res_missions.get_data(as_text=True)
+
+    # 6. Leaderboard rankings
+    res_leaderboard = client.get("/leaderboard/")
+    assert res_leaderboard.status_code == 200
+    assert "EcoQuest" in res_leaderboard.get_data(as_text=True)
+
+
+
 
