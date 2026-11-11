@@ -8,7 +8,7 @@ and template context providers.
 
 import os
 from flask import Flask, render_template, session, g
-from config import config_by_name
+from config import config_by_name, normalize_database_url
 from models import db, User
 from services.email_service import mail
 from services.csrf import generate_csrf_token
@@ -29,17 +29,35 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get("FLASK_ENV", "development")
 
-    app = Flask(
-        __name__,
-        template_folder="templates",
-        static_folder="static",
-        instance_relative_config=True,
-    )
+    is_vercel = bool(os.environ.get("VERCEL"))
+
+    flask_kwargs = {
+        "template_folder": "templates",
+        "static_folder": "static",
+        "instance_relative_config": True,
+    }
+    if is_vercel:
+        # On Vercel, the application root (/var/task) is a read-only filesystem.
+        # Direct Flask's instance path to a writable absolute directory under /tmp.
+        flask_kwargs["instance_path"] = os.path.abspath("/tmp/instance")
+
+    app = Flask(__name__, **flask_kwargs)
 
     # Load configuration
     app.config.from_object(config_by_name[config_name])
 
-    # Validate production SECRET_KEY security
+    # Dynamic environment overrides for serverless platforms
+    if is_vercel:
+        app.config["UPLOAD_FOLDER"] = os.path.abspath("/tmp/uploads/profiles")
+        app.config["EVIDENCE_FOLDER"] = os.path.abspath("/tmp/evidence")
+
+    if os.environ.get("SUPABASE_URL"):
+        app.config["SUPABASE_URL"] = os.environ.get("SUPABASE_URL").rstrip("/")
+
+    if os.environ.get("SUPABASE_SERVICE_ROLE_KEY"):
+        app.config["SUPABASE_SERVICE_ROLE_KEY"] = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+
+    # Validate production SECRET_KEY and cloud services security
     if config_name == "production" or os.environ.get("FLASK_ENV") == "production":
         # Always inspect current environment variable in production
         secret_key = os.environ.get("SECRET_KEY")
@@ -57,14 +75,38 @@ def create_app(config_name=None):
             )
         app.config["SECRET_KEY"] = secret_key
 
-    # Ensure required directories exist
-    os.makedirs(app.instance_path, exist_ok=True)
-    if "UPLOAD_FOLDER" in app.config:
+        # Update database URI from current environment in production
+        db_url_env = os.environ.get("DATABASE_URL")
+        app.config["SQLALCHEMY_DATABASE_URI"] = normalize_database_url(db_url_env)
+
+        # In production on Vercel, enforce Supabase PostgreSQL and Supabase Storage
+        if is_vercel:
+            db_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+            if not db_uri or db_uri.startswith("sqlite"):
+                raise ValueError(
+                    "Production deployment on Vercel requires DATABASE_URL to be configured "
+                    "with your Supabase PostgreSQL connection string. SQLite databases "
+                    "must not be written or used in production on Vercel."
+                )
+            if not app.config.get("SUPABASE_URL") or not app.config.get("SUPABASE_SERVICE_ROLE_KEY"):
+                raise ValueError(
+                    "Production deployment on Vercel requires SUPABASE_URL and "
+                    "SUPABASE_SERVICE_ROLE_KEY for persistent media storage. "
+                    "Permanent user uploads must not be stored in ephemeral /tmp."
+                )
+
+    # Ensure required directories exist safely (handling read-only environments)
+    try:
+        os.makedirs(app.instance_path, exist_ok=True)
+    except OSError:
+        pass
+
+    if "UPLOAD_FOLDER" in app.config and app.config["UPLOAD_FOLDER"]:
         try:
             os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
         except OSError:
             pass
-    if "EVIDENCE_FOLDER" in app.config:
+    if "EVIDENCE_FOLDER" in app.config and app.config["EVIDENCE_FOLDER"]:
         try:
             os.makedirs(app.config["EVIDENCE_FOLDER"], exist_ok=True)
         except OSError:

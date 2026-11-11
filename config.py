@@ -17,10 +17,14 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 def normalize_database_url(url: str | None) -> str:
     """
     Ensure the database connection URI uses SQLAlchemy-compatible scheme.
-    Converts legacy 'postgres://' prefixes to 'postgresql://',
-    preserves existing valid URIs, and provides local SQLite fallback.
+    Converts legacy 'postgres://' or driverless 'postgresql://' prefixes
+    to use the installed psycopg2 driver ('postgresql+psycopg2://').
+    Preserves existing valid URIs, and provides local SQLite fallback.
     """
     if not url or not url.strip():
+        # Do not default to SQLite in production on Vercel
+        if os.environ.get("VERCEL") and os.environ.get("FLASK_ENV") == "production":
+            return ""
         if os.environ.get("VERCEL"):
             return "sqlite:////tmp/ecoquest.db"
         default_db_path = os.path.join(BASE_DIR, "instance", "ecoquest.db")
@@ -28,7 +32,9 @@ def normalize_database_url(url: str | None) -> str:
 
     cleaned = url.strip()
     if cleaned.startswith("postgres://"):
-        cleaned = "postgresql://" + cleaned[len("postgres://"):]
+        cleaned = "postgresql+psycopg2://" + cleaned[len("postgres://"):]
+    elif cleaned.startswith("postgresql://"):
+        cleaned = "postgresql+psycopg2://" + cleaned[len("postgresql://"):]
     return cleaned
 
 

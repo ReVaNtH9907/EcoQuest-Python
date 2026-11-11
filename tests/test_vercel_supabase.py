@@ -48,16 +48,17 @@ from services.supabase_storage import (
 # --- 1. Database URL Normalization Tests ---
 
 def test_normalize_database_url_converts_postgres_to_postgresql():
-    """Ensure postgres:// is safely converted to postgresql://."""
+    """Ensure postgres:// is safely converted to postgresql+psycopg2://."""
     raw = "postgres://postgres:secretpassword@db.supabase.co:5432/postgres"
-    expected = "postgresql://postgres:secretpassword@db.supabase.co:5432/postgres"
+    expected = "postgresql+psycopg2://postgres:secretpassword@db.supabase.co:5432/postgres"
     assert normalize_database_url(raw) == expected
 
 
 def test_normalize_database_url_preserves_postgresql():
-    """Ensure already-correct postgresql:// URLs remain untouched."""
+    """Ensure driverless postgresql:// URLs get explicit psycopg2 driver."""
     raw = "postgresql://postgres:secretpassword@db.supabase.co:5432/postgres"
-    assert normalize_database_url(raw) == raw
+    expected = "postgresql+psycopg2://postgres:secretpassword@db.supabase.co:5432/postgres"
+    assert normalize_database_url(raw) == expected
 
 
 def test_normalize_database_url_fallback_to_sqlite():
@@ -394,4 +395,99 @@ def test_no_sqlite_assumptions_in_app():
     assert "sqlite" not in content.lower() or "sqlite and postgresql" in content.lower(), (
         "Potential hardcoded SQLite assumptions found in app.py"
     )
+
+
+# --- 9. Vercel Read-Only Filesystem & Production Deployment Regression Tests ---
+
+def test_vercel_readonly_filesystem_instance_path(monkeypatch):
+    """
+    Regression test for Vercel deployment:
+    Ensures instance_path is placed under /tmp/instance and never triggers:
+    OSError: [Errno 30] Read-only file system: '/var/task/instance'
+    """
+    monkeypatch.setenv("VERCEL", "1")
+
+    # Simulate read-only filesystem where /var/task is unwritable
+    original_makedirs = os.makedirs
+
+    def mock_makedirs(name, mode=0o777, exist_ok=False):
+        normalized = str(name).replace("\\", "/")
+        if "/var/task" in normalized:
+            raise OSError(30, f"Read-only file system: '{name}'")
+        return original_makedirs(name, mode=mode, exist_ok=exist_ok)
+
+    monkeypatch.setattr(os, "makedirs", mock_makedirs)
+
+    app = create_app("testing")
+    assert "/tmp/instance" in app.instance_path.replace("\\", "/")
+    assert "/tmp/uploads/profiles" in app.config["UPLOAD_FOLDER"].replace("\\", "/")
+    assert "/tmp/evidence" in app.config["EVIDENCE_FOLDER"].replace("\\", "/")
+
+
+def test_vercel_production_rejects_sqlite_database(monkeypatch):
+    """
+    Regression test:
+    Production on Vercel must not write SQLite databases to /tmp.
+    It must require a PostgreSQL DATABASE_URL.
+    """
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "a-very-strong-production-secret-key-32-chars-long")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    with pytest.raises(ValueError, match="DATABASE_URL"):
+        create_app("production")
+
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///test.db")
+    with pytest.raises(ValueError, match="DATABASE_URL"):
+        create_app("production")
+
+
+def test_vercel_production_enforces_supabase_storage_credentials(monkeypatch):
+    """
+    Regression test:
+    Production on Vercel must require SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
+    so user uploads are permanently persisted rather than stored in ephemeral /tmp.
+    """
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "a-very-strong-production-secret-key-32-chars-long")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://postgres:secret@db.supabase.co:5432/postgres")
+    monkeypatch.delenv("SUPABASE_URL", raising=False)
+    monkeypatch.delenv("SUPABASE_SERVICE_ROLE_KEY", raising=False)
+
+    with pytest.raises(ValueError, match="SUPABASE_URL"):
+        create_app("production")
+
+
+def test_vercel_production_initializes_with_supabase(monkeypatch):
+    """
+    Verify successful initialization when all Supabase production credentials are provided on Vercel.
+    """
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "a-very-strong-production-secret-key-32-chars-long")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://postgres:secret@db.supabase.co:5432/postgres")
+    monkeypatch.setenv("SUPABASE_URL", "https://xyzproject.supabase.co")
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "test-service-key-valid")
+
+    app = create_app("production")
+    assert "/tmp/instance" in app.instance_path.replace("\\", "/")
+    assert app.config["SQLALCHEMY_DATABASE_URI"].startswith(("postgresql://", "postgresql+psycopg2://"))
+    assert "/tmp/uploads/profiles" in app.config["UPLOAD_FOLDER"].replace("\\", "/")
+    assert "/tmp/evidence" in app.config["EVIDENCE_FOLDER"].replace("\\", "/")
+
+
+def test_local_development_preserves_standard_instance_path(monkeypatch):
+    """
+    Verify that outside Vercel, normal local development paths and SQLite are fully preserved.
+    """
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("FLASK_ENV", "development")
+
+    app = create_app("development")
+    assert "/tmp/instance" not in app.instance_path
+    assert "instance" in app.instance_path
+    assert "sqlite" in app.config["SQLALCHEMY_DATABASE_URI"]
+
 
